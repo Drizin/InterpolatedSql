@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>InterpolatedSql</id>
+    <title>InterpolatedSql</title>
+    <authors>Rick Drizin</authors>
+    <owners>Rick Drizin</owners>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/Drizin/InterpolatedSql</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>InterpolatedSqlBuilder: Sql Builder using String Interpolation (injection-safe!)</description>
+    <copyright>Copyright Rick Drizin 2023</copyright>
+    <dependencies>
+    </dependencies>
+  </metadata>
+</package>

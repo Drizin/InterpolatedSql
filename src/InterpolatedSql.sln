@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32505.173
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{88CCCDA2-06FC-42EF-8AAF-D92250C285AD}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InterpolatedSql", "InterpolatedSql\InterpolatedSql.csproj", "{4C89CBC9-A8DD-442A-8273-3521653D3600}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InterpolatedSql.Tests", "InterpolatedSql.Tests\InterpolatedSql.Tests.csproj", "{1D3449CF-A1D8-483E-91D3-0C4828E0BF0B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4C89CBC9-A8DD-442A-8273-3521653D3600}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C89CBC9-A8DD-442A-8273-3521653D3600}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C89CBC9-A8DD-442A-8273-3521653D3600}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C89CBC9-A8DD-442A-8273-3521653D3600}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D3449CF-A1D8-483E-91D3-0C4828E0BF0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D3449CF-A1D8-483E-91D3-0C4828E0BF0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D3449CF-A1D8-483E-91D3-0C4828E0BF0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D3449CF-A1D8-483E-91D3-0C4828E0BF0B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AB589EF0-8B1A-4791-A8B5-F3ED178AF34F}
+	EndGlobalSection
+EndGlobal

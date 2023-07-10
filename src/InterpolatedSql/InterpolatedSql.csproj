@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;net462;net472;net6.0;net7.0</TargetFrameworks>
+		<Authors>Rick Drizin</Authors>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/Drizin/InterpolatedSql/</PackageProjectUrl>
+		<Description>SQL Builder using Fluent API and String Interpolation</Description>
+		<Copyright>Rick Drizin</Copyright>
+		<Company>Rick Drizin</Company>
+		<Version>2.0.0-beta1</Version>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<Title>InterpolatedSql</Title>
+		<PackageId>InterpolatedSql</PackageId>
+		<DocumentationFile>InterpolatedSql.xml</DocumentationFile>
+		<PackageTags>sql builder;interpolated strings;formattablestring;query builder;string interpolation;</PackageTags>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<!-- Include symbol files (*.pdb) in the main .nupkg -->
+		<PackageReadmeFile>NuGetReadMe.md</PackageReadmeFile>
+		<AssemblyName>InterpolatedSql</AssemblyName>
+		<Nullable>enable</Nullable>
+		<LangVersion>8.0</LangVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="NuGetReadMe.md" Pack="true" PackagePath="\" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<Choose>
+		<When Condition="'$(Configuration)' == 'Debug'">
+			<ItemGroup>
+				<InternalsVisibleTo Include="InterpolatedSql.Tests" />
+			</ItemGroup>
+		</When>
+		<Otherwise>
+			<ItemGroup>
+				<InternalsVisibleTo Include="InterpolatedSql.Tests" />
+			</ItemGroup>
+		</Otherwise>
+	</Choose>
+
+</Project>

@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netframework461;net5.0;net6.0;net7.0</TargetFrameworks>
+		<IsPackable>false</IsPackable>
+		<Company>Rick Drizin</Company>
+		<Copyright>Rick Drizin</Copyright>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/Drizin/InterpolatedSql/</PackageProjectUrl>
+		<Nullable>enable</Nullable>
+		<LangVersion>10.0</LangVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
+		<PackageReference Include="nunit" Version="3.13.3" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
+		<PackageReference Include="NUnit3TestAdapter" Version="4.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\InterpolatedSql\InterpolatedSql.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,57 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;net462;net472;net6.0;net7.0</TargetFrameworks>
+		<Authors>Rick Drizin</Authors>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/Drizin/InterpolatedSql/</PackageProjectUrl>
+		<Description>SQL Builder using Fluent API and String Interpolation</Description>
+		<Copyright>Rick Drizin</Copyright>
+		<Company>Rick Drizin</Company>
+		<Version>2.0.0-beta1</Version>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<Title>InterpolatedSql (Strong Named)</Title>
+		<PackageId>InterpolatedSql.StrongName</PackageId>
+		<DocumentationFile>InterpolatedSql.StrongName.xml</DocumentationFile>
+		<PackageTags>sql builder;interpolated strings;formattablestring;query builder;string interpolation;</PackageTags>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<!-- Include symbol files (*.pdb) in the main .nupkg -->
+		<PackageReadmeFile>NuGetReadMe.md</PackageReadmeFile>
+		<AssemblyName>InterpolatedSql.StrongName</AssemblyName>
+		<Nullable>enable</Nullable>
+		<LangVersion>8.0</LangVersion>
+	</PropertyGroup>
+		
+	<ItemGroup>
+		<None Include="..\InterpolatedSql\NuGetReadMe.md" Pack="true" PackagePath="\" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<Choose>
+		<When Condition="'$(Configuration)' == 'Debug'">
+			<PropertyGroup>
+				<SignAssembly>True</SignAssembly>
+				<AssemblyOriginatorKeyFile>..\debug.snk</AssemblyOriginatorKeyFile>
+			</PropertyGroup>
+		</When>
+		<Otherwise>
+			<PropertyGroup>
+				<SignAssembly>True</SignAssembly>
+				<AssemblyOriginatorKeyFile>..\release.snk</AssemblyOriginatorKeyFile>
+			</PropertyGroup>
+		</Otherwise>
+	</Choose>
+
+	<ItemGroup>
+		<Folder Include="Properties\" />
+		<Compile Include="..\InterpolatedSql\**\*.cs" Exclude="..\InterpolatedSql\obj\**\*.cs" />
+	</ItemGroup>
+
+
+</Project>
+
