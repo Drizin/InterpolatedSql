@@ -19,9 +19,8 @@ namespace InterpolatedSql
         public static bool IsAnsiDefault { get; set; }
 
         /// <summary>
-        /// A value to set the default value of strings
-        /// going through Dapper. Default is 4000, any value larger than this
-        /// field will not have the default value applied.
+        /// Default length of strings when they are passed to Dapper (or other ORM).
+        /// Default is 4000, but any value larger than this field will not have the default value applied.
         /// </summary>
         public const int DefaultLength = 4000;
 

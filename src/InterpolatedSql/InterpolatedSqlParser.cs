@@ -198,9 +198,10 @@ namespace InterpolatedSql
         }
 
         /// <summary>
-        /// Can transform the argument into different object types.
-        /// For most cases argumentValue will be a primitive type (int, string) and won't be transformed here 
-        /// (later in the process it can be converted by Dapper, which for most cases can infer the right DbType).
+        /// This method can be used to transform the argument into different object types.
+        /// 
+        /// For most cases argumentValue will be a primitive type (int, string) and won't be transformed here, 
+        /// then later in the process (when Dapper/ORM comes in) these primitive types are converted to your db types (for most cases can infer the right DbType).
         /// 
         /// For very specific cases it's possible to explicitly define the DbType using format specifiers,
         /// and in this case argumentValue will be transformed into a <see cref="StringParameterInfo"/> (for strings) or <see cref="DbTypeParameterInfo"/> (for other db types).
@@ -366,7 +367,6 @@ namespace InterpolatedSql
             target.AppendArgument(argument, argumentAlignment, argumentFormat);
         }
 
-
         /// <summary>
         /// When an interpolated string is appended to another, the placeholder positions must be shifted.
         /// </summary>
@@ -375,6 +375,7 @@ namespace InterpolatedSql
             string newFormat = _formattableArgumentRegex.Replace(format.ToString(), match => ReplacePlaceholderPosition(match, getNewPos));
             return newFormat; //TODO: use StringBuilder and do replaces inline, saving memory
         }
+
         /// <summary>
         /// When a FormattableString is appended to an existing InterpolatedString, 
         /// the underlying format (where there are numeric placeholders) needs to be shifted because the arguments will have new positions in the final array
@@ -388,7 +389,6 @@ namespace InterpolatedSql
             string newPlaceholder = string.Format("{0}{1}{2}", match.Value.Substring(0, parm.Index - match.Index), replace, match.Value.Substring(parm.Index - match.Index + parm.Length));
             return newPlaceholder;
         }
-
 
         // Multi-line blocks can be conveniently used with any indentation, and we will correctly adjust the indentation of those blocks (TrimLeftPadding and TrimFirstEmptyLine)
         /// <summary>

@@ -352,3 +352,5 @@ MigrationBackup/
 /src/InterpolatedSql.StrongName/InterpolatedSql.StrongName.xml
 /src/release.snk
 
+/src/InterpolatedSql.Dapper.StrongName/InterpolatedSql.Dapper.StrongName.xml
+/src/InterpolatedSql.Dapper/InterpolatedSql.Dapper.xml

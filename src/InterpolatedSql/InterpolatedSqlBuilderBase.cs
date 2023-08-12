@@ -74,11 +74,12 @@ namespace InterpolatedSql
 
         /// <summary>
         /// Optional associated DbConnection. Can be used in custom extensions.
+        /// (but instead of using this nullable property please consider creating a subtype and hiding it with a non-nullable property - see InterpolatedSql.Dapper.SqlBuilder)
         /// </summary>
         public IDbConnection? DbConnection { get; set; }
 
         /// <summary>
-        /// Object bag - can be used in custom extensions
+        /// Object bag - can be used in custom extensions (but consider creating a subtype instead of using this)
         /// </summary>
         public Dictionary<string, object>? ObjectBag { get; set; }
 
@@ -713,7 +714,7 @@ namespace InterpolatedSql
         /// Explicitly adds a single parameter to current Command Builder. <br />
         /// This is usually only for stored procedures where the @parameterName is already defined in the stored procedure.
         /// For building dynamic SQL statements you should just append interpolated strings and interpolated the parameters:
-        /// it's possible to interpolate any primitive type (string, int, double, etc - Dapper will convert to SqlParameter),
+        /// it's possible to interpolate any primitive type (string, int, double, etc - Dapper/ORM will convert to SqlParameter),
         /// or you can interpolate <see cref="SqlParameterInfo"/> or even System.Data.SqlParameter.
         /// </summary>
         public virtual void AddParameter(string parameterName, object? parameterValue = null, DbType? dbType = null, ParameterDirection? direction = null, int? size = null, byte? precision = null, byte? scale = null)

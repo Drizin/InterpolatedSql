@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>InterpolatedSql.Dapper.StrongName</id>
+    <title>InterpolatedSql.Dapper (Strong Named)</title>
+    <authors>Rick Drizin</authors>
+    <owners>Rick Drizin</owners>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/Drizin/InterpolatedSql</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>InterpolatedSql.Dapper: Dapper Query Builder using String Interpolation and Fluent API</description>
+    <copyright>Copyright Rick Drizin 2020</copyright>
+    <dependencies>
+    </dependencies>
+  </metadata>
+</package>

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace InterpolatedSql
@@ -90,14 +89,14 @@ namespace InterpolatedSql
 
 #if NET6_0_OR_GREATER
         /// <inheritdoc/>        
-        public new T Append([InterpolatedStringHandlerArgument("")] ref InterpolatedSqlHandler value)
+        public new T Append([System.Runtime.CompilerServices.InterpolatedStringHandlerArgument("")] ref InterpolatedSqlHandler value)
         {
             base.Append(ref value);
             return (T)this;
         }
 
         /// <inheritdoc/>
-        public new T AppendIf(bool condition, [InterpolatedStringHandlerArgument(new[] { "", "condition" })] ref InterpolatedSqlHandler value)
+        public new T AppendIf(bool condition, [System.Runtime.CompilerServices.InterpolatedStringHandlerArgument(new[] { "", "condition" })] ref InterpolatedSqlHandler value)
         {
             base.AppendIf(condition, ref value);
             return (T)this;

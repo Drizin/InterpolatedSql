@@ -10,6 +10,7 @@ namespace InterpolatedSql
     {
         /// <summary>
         /// Like <see cref="FormattableString.Format"/> - it's a string containing numbered placeholders - like "SELECT * FROM Table WHERE column >= {0}".
+        /// It may (or may not) be convertable into a full Sql statement (some IInterpolatedSql implementations can be incomplete statements)
         /// </summary>
         string Format { get; }
 
@@ -27,6 +28,14 @@ namespace InterpolatedSql
 
         /// <inheritdoc cref="InterpolatedSqlBuilderOptions"/>
         public InterpolatedSqlBuilderOptions Options { get; set; }
+    }
+
+    /// <summary>
+    /// Sql statement written using string interpolation.
+    /// </summary>
+    public interface IInterpolatedSql<T> : IInterpolatedSql
+    {
+
     }
 
 }

@@ -1,8 +1,4 @@
-﻿#if NET6_0_OR_GREATER
-using System.Runtime.CompilerServices;
-#else
-using System;
-#endif
+﻿using System;
 
 namespace InterpolatedSql
 {
@@ -25,7 +21,7 @@ namespace InterpolatedSql
         /// <summary>
         /// Creates a new InterpolatedSqlBuilder using an InterpolatedStringHandler.
         /// </summary>
-        public virtual InterpolatedSqlBuilder Create(InterpolatedSqlBuilderOptions options, [InterpolatedStringHandlerArgument("options")] ref InterpolatedSqlHandler value)
+        public virtual InterpolatedSqlBuilder Create(InterpolatedSqlBuilderOptions options, [System.Runtime.CompilerServices.InterpolatedStringHandlerArgument("options")] ref InterpolatedSqlHandler value)
         {
             if (value.InterpolatedSqlBuilder.Options.AutoAdjustMultilineString)
                 value.AdjustMultilineString();

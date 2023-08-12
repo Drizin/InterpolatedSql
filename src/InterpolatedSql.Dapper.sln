@@ -1,0 +1,58 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32505.173
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{88CCCDA2-06FC-42EF-8AAF-D92250C285AD}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InterpolatedSql", "InterpolatedSql\InterpolatedSql.csproj", "{4C89CBC9-A8DD-442A-8273-3521653D3600}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InterpolatedSql.Tests", "InterpolatedSql.Tests\InterpolatedSql.Tests.csproj", "{1D3449CF-A1D8-483E-91D3-0C4828E0BF0B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InterpolatedSql.Dapper", "InterpolatedSql.Dapper\InterpolatedSql.Dapper.csproj", "{3BB589A9-7775-44C2-A8AD-4034DB4B8FA4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InterpolatedSql.Dapper.Tests", "InterpolatedSql.Dapper.Tests\InterpolatedSql.Dapper.Tests.csproj", "{533C1C14-D489-463F-96DC-21634F7D744F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "InterpolatedSql", "InterpolatedSql", "{0425816F-5240-49FB-A774-CD0E736A15E7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "InterpolatedSql.Dapper", "InterpolatedSql.Dapper", "{07E20BA2-09BE-416C-AD43-92BBD89D9A70}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4C89CBC9-A8DD-442A-8273-3521653D3600}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C89CBC9-A8DD-442A-8273-3521653D3600}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C89CBC9-A8DD-442A-8273-3521653D3600}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C89CBC9-A8DD-442A-8273-3521653D3600}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D3449CF-A1D8-483E-91D3-0C4828E0BF0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D3449CF-A1D8-483E-91D3-0C4828E0BF0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D3449CF-A1D8-483E-91D3-0C4828E0BF0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D3449CF-A1D8-483E-91D3-0C4828E0BF0B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BB589A9-7775-44C2-A8AD-4034DB4B8FA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BB589A9-7775-44C2-A8AD-4034DB4B8FA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BB589A9-7775-44C2-A8AD-4034DB4B8FA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BB589A9-7775-44C2-A8AD-4034DB4B8FA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{533C1C14-D489-463F-96DC-21634F7D744F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{533C1C14-D489-463F-96DC-21634F7D744F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{533C1C14-D489-463F-96DC-21634F7D744F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{533C1C14-D489-463F-96DC-21634F7D744F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4C89CBC9-A8DD-442A-8273-3521653D3600} = {0425816F-5240-49FB-A774-CD0E736A15E7}
+		{1D3449CF-A1D8-483E-91D3-0C4828E0BF0B} = {0425816F-5240-49FB-A774-CD0E736A15E7}
+		{3BB589A9-7775-44C2-A8AD-4034DB4B8FA4} = {07E20BA2-09BE-416C-AD43-92BBD89D9A70}
+		{533C1C14-D489-463F-96DC-21634F7D744F} = {07E20BA2-09BE-416C-AD43-92BBD89D9A70}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AB589EF0-8B1A-4791-A8B5-F3ED178AF34F}
+	EndGlobalSection
+EndGlobal

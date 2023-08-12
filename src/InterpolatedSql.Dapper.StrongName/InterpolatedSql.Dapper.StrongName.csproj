@@ -5,31 +5,37 @@
 		<Authors>Rick Drizin</Authors>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/Drizin/InterpolatedSql/</PackageProjectUrl>
-		<Description>SQL Builder using Fluent API and String Interpolation</Description>
+		<Description>Dapper Query Builder using Fluent API and String Interpolation</Description>
 		<Copyright>Rick Drizin</Copyright>
 		<Company>Rick Drizin</Company>
 		<Version>2.0.0-beta2</Version>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Title>InterpolatedSql (Strong Named)</Title>
-		<PackageId>InterpolatedSql.StrongName</PackageId>
-		<DocumentationFile>InterpolatedSql.StrongName.xml</DocumentationFile>
-		<PackageTags>sql builder;interpolated strings;formattablestring;query builder;string interpolation;</PackageTags>
+		<Title>InterpolatedSql.Dapper (Strong Named)</Title>
+		<PackageId>InterpolatedSql.Dapper.StrongName</PackageId>
+		<DocumentationFile>InterpolatedSql.Dapper.StrongName.xml</DocumentationFile>
+		<PackageTags>interpolated sql;dapper;query-builder;query builder;dapperquerybuilder;dapper-query-builder;dapper-interpolation;dapper-interpolated-string</PackageTags>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<!-- Include symbol files (*.pdb) in the main .nupkg -->
 		<PackageReadmeFile>NuGetReadMe.md</PackageReadmeFile>
-		<AssemblyName>InterpolatedSql.StrongName</AssemblyName>
+		<AssemblyName>InterpolatedSql.Dapper.StrongName</AssemblyName>
 		<Nullable>enable</Nullable>
 		<LangVersion>8.0</LangVersion>
 	</PropertyGroup>
-		
+
 	<ItemGroup>
-		<None Include="..\InterpolatedSql\NuGetReadMe.md" Pack="true" PackagePath="\" />
+		<None Include="..\InterpolatedSql.Dapper\NuGetReadMe.md" Pack="true" PackagePath="\" />
+		<PackageReference Include="Dapper.StrongName" Version="2.0.123" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\InterpolatedSql.StrongName\InterpolatedSql.StrongName.csproj" />
 	</ItemGroup>
 
 	<Choose>
@@ -48,8 +54,7 @@
 	</Choose>
 
 	<ItemGroup>
-		<Folder Include="Properties\" />
-		<Compile Include="..\InterpolatedSql\**\*.cs" Exclude="..\InterpolatedSql\obj\**\*.cs" />
+		<Compile Include="..\InterpolatedSql.Dapper\**\*.cs" Exclude="..\InterpolatedSql.Dapper\obj\**\*.cs" />
 	</ItemGroup>
 
 
