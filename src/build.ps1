@@ -87,6 +87,32 @@ try {
 			   /p:ContinuousIntegrationBuild=true
 	if (! $?) { throw "msbuild failed" }
 
+	# InterpolatedSql.Dapper + nupkg/snupkg (dotnet build is the best at restoring packages; but for deterministic builds we need msbuild)
+	dotnet build -c release InterpolatedSql.Dapper\InterpolatedSql.Dapper.csproj
+	& $msbuild "InterpolatedSql.Dapper\InterpolatedSql.Dapper.csproj" `
+			   /t:Pack                                        `
+			   /p:PackageOutputPath="..\packages-local\"      `
+			   '/p:targetFrameworks="netstandard2.0;net462;net472;net5.0;net6.0;net7.0"'  `
+			   /p:Configuration=$configuration                `
+			   /p:IncludeSymbols=true                         `
+			   /p:SymbolPackageFormat=snupkg                  `
+			   /verbosity:minimal                             `
+			   /p:ContinuousIntegrationBuild=true
+	if (! $?) { throw "msbuild failed" }
+
+	# InterpolatedSql.Dapper.StrongName + nupkg/snupkg (dotnet build is the best at restoring packages; but for deterministic builds we need msbuild)
+	dotnet build -c release InterpolatedSql.Dapper.StrongName\InterpolatedSql.Dapper.StrongName.csproj
+	& $msbuild "InterpolatedSql.Dapper.StrongName\InterpolatedSql.Dapper.StrongName.csproj" `
+			   /t:Pack                                        `
+			   /p:PackageOutputPath="..\packages-local\"      `
+			   '/p:targetFrameworks="netstandard2.0;net462;net472;net5.0;net6.0;net7.0"'  `
+			   /p:Configuration=$configuration                `
+			   /p:IncludeSymbols=true                         `
+			   /p:SymbolPackageFormat=snupkg                  `
+			   /verbosity:minimal                             `
+			   /p:ContinuousIntegrationBuild=true
+	if (! $?) { throw "msbuild failed" }
+
 } finally {
     Pop-Location
 }
@@ -97,4 +123,8 @@ if ($configuration -eq "Debug")
 {
     dotnet build -c release InterpolatedSql.Tests\InterpolatedSql.Tests.csproj
     dotnet test  InterpolatedSql.Tests\InterpolatedSql.Tests.csproj
+	
+    dotnet build -c release InterpolatedSql.Dapper.Tests\InterpolatedSql.Dapper.Tests.csproj
+    dotnet test  InterpolatedSql.Dapper.Tests\InterpolatedSql.Dapper.Tests.csproj
+
 }
