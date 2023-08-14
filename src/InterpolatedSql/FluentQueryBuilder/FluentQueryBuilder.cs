@@ -20,9 +20,9 @@ namespace InterpolatedSql.FluentQueryBuilder
     {
 
         #region Members
-        private readonly InterpolatedSqlBuilder _orderBy = new InterpolatedSqlBuilder();
         private readonly InterpolatedSqlBuilder _groupBy = new InterpolatedSqlBuilder();
         private readonly InterpolatedSqlBuilder _having = new InterpolatedSqlBuilder();
+        private readonly InterpolatedSqlBuilder _orderBy = new InterpolatedSqlBuilder();
         private int? _rowCount = null;
         private int? _offset = null;
         private bool _isSelectDistinct = false;
@@ -36,16 +36,6 @@ namespace InterpolatedSql.FluentQueryBuilder
 
         /// <inheritdoc/>
         public FluentQueryBuilder(IDbConnection connection) : base(connection)
-        {
-        }
-
-        /// <inheritdoc/>
-        public FluentQueryBuilder(FormattableString query) : base(query)
-        {
-        }
-
-        /// <inheritdoc/>
-        public FluentQueryBuilder(IDbConnection connection, FormattableString query) : base(connection, query)
         {
         }
         #endregion
@@ -111,17 +101,6 @@ namespace InterpolatedSql.FluentQueryBuilder
 
 
         /// <summary>
-        /// Adds one or more column(s) to orderby clauses.
-        /// </summary>
-        public IOrderByBuilder<T> OrderBy(FormattableString orderBy)
-        {
-            if (!_orderBy.IsEmpty)
-                _orderBy.AppendLiteral(", ");
-            _orderBy.Append(orderBy);
-            return this;
-        }
-
-        /// <summary>
         /// Adds one or more column(s) to groupby clauses.
         /// </summary>
         public IGroupByBuilder<T> GroupBy(FormattableString groupBy)
@@ -140,6 +119,17 @@ namespace InterpolatedSql.FluentQueryBuilder
             if (!_having.IsEmpty)
                 _having.AppendLiteral(", ");
             _having.Append(having);
+            return this;
+        }
+
+        /// <summary>
+        /// Adds one or more column(s) to orderby clauses.
+        /// </summary>
+        public IOrderByBuilder<T> OrderBy(FormattableString orderBy)
+        {
+            if (!_orderBy.IsEmpty)
+                _orderBy.AppendLiteral(", ");
+            _orderBy.Append(orderBy);
             return this;
         }
 

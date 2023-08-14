@@ -28,12 +28,6 @@ namespace InterpolatedSql.Dapper.FluentQueryBuilder
         {
             Options.CalculateAutoParameterName = (parameter, pos) => InterpolatedSqlDapperOptions.InterpolatedSqlParameterParser.CalculateAutoParameterName(parameter, pos, base.Options);
         }
-
-        /// <inheritdoc/>
-        public FluentQueryBuilder(IDbConnection connection, FormattableString query) : base(connection, query)
-        {
-            Options.CalculateAutoParameterName = (parameter, pos) => InterpolatedSqlDapperOptions.InterpolatedSqlParameterParser.CalculateAutoParameterName(parameter, pos, base.Options);
-        }
         #endregion
 
         #region Overrides
@@ -61,11 +55,6 @@ namespace InterpolatedSql.Dapper.FluentQueryBuilder
         #region ctors
         /// <inheritdoc/>
         public FluentQueryBuilder(IDbConnection connection) : base(connection)
-        {
-        }
-
-        /// <inheritdoc/>
-        public FluentQueryBuilder(IDbConnection connection, FormattableString query) : base(connection, query)
         {
         }
         #endregion
