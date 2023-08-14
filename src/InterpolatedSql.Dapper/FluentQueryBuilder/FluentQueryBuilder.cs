@@ -9,10 +9,11 @@ namespace InterpolatedSql.Dapper.FluentQueryBuilder
     /// (an injection-safe dynamic SQL builder with a Fluent API that helps to build the query step by step)
     /// but also wraps an underlying IDbConnection, and there are extensions to invoke Dapper methods
     /// </summary>
-    public class FluentQueryBuilder
-        : InterpolatedSql.FluentQueryBuilder.FluentQueryBuilder<FluentQueryBuilder>,
-        IFluentQueryBuilder<FluentQueryBuilder>
+    public class FluentQueryBuilder<T>
+        : InterpolatedSql.FluentQueryBuilder.FluentQueryBuilder<T>,
+        IFluentQueryBuilder<T>
         ,IDapperSqlCommand
+        where T : FluentQueryBuilder<T>, IFluentQueryBuilder<T>
     {
         #region Members
         private ParametersDictionary? _cachedDapperParameters = null;
@@ -52,6 +53,23 @@ namespace InterpolatedSql.Dapper.FluentQueryBuilder
             set => base.DbConnection = value;
         }
         #endregion
+    }
+
+    /// <inheritdoc/>
+    public class FluentQueryBuilder : FluentQueryBuilder<FluentQueryBuilder>
+    {
+        #region ctors
+        /// <inheritdoc/>
+        public FluentQueryBuilder(IDbConnection connection) : base(connection)
+        {
+        }
+
+        /// <inheritdoc/>
+        public FluentQueryBuilder(IDbConnection connection, FormattableString query) : base(connection, query)
+        {
+        }
+        #endregion
+
     }
 
 }

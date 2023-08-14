@@ -10,7 +10,8 @@ namespace InterpolatedSql.Dapper
     /// and maps <see cref="IInterpolatedSql.SqlParameters"/> and <see cref="IInterpolatedSql.ExplicitParameters"/>
     /// into Dapper <see cref="global::Dapper.DynamicParameters"/> type.
     /// </summary>
-    public class QueryBuilder : InterpolatedSql.QueryBuilder<QueryBuilder>, IDapperSqlCommand<QueryBuilder>
+    public class QueryBuilder<T> : InterpolatedSql.QueryBuilder<T>, IDapperSqlCommand<T>
+        where T : QueryBuilder<T>
     {
         #region Members
         private ParametersDictionary? _cachedDapperParameters = null;
@@ -51,5 +52,21 @@ namespace InterpolatedSql.Dapper
         }
         #endregion
 
+    }
+
+    /// <inheritdoc/>
+    public class QueryBuilder : QueryBuilder<QueryBuilder>
+    {
+        #region ctors
+        /// <inheritdoc/>
+        public QueryBuilder(IDbConnection connection) : base(connection)
+        {
+        }
+
+        /// <inheritdoc/>
+        public QueryBuilder(IDbConnection connection, FormattableString query) : base(connection, query)
+        {
+        }
+        #endregion
     }
 }

@@ -28,7 +28,8 @@ namespace InterpolatedSql.Dapper
     /// provides facades (as extension-methods) to invoke Dapper extensions (see <see cref="IDapperSqlCommandExtensions"/>),
     /// and maps to Dapper <see cref="global::Dapper.DynamicParameters"/> type.
     /// </summary>
-    public class SqlBuilder : InterpolatedSqlBuilder<SqlBuilder>, ISqlCommand<SqlBuilder>, ISqlBuilder<SqlBuilder>
+    public class SqlBuilder<T> : InterpolatedSqlBuilder<T>, ISqlCommand<T>, ISqlBuilder<T>
+        where T : SqlBuilder<T>, ISqlBuilder<T>
     {
         #region Members
         private ParametersDictionary? _cachedDapperParameters = null;
@@ -94,5 +95,32 @@ namespace InterpolatedSql.Dapper
             set => base.DbConnection = value;
         }
         #endregion
+    }
+
+    /// <inheritdoc/>
+    public class SqlBuilder : SqlBuilder<SqlBuilder>
+    {
+        #region ctors
+        /// <inheritdoc/>
+        protected internal SqlBuilder(IDbConnection connection, InterpolatedSqlBuilderOptions? options, StringBuilder? format, List<InterpolatedSqlParameter>? arguments) : base(connection, options, format, arguments)
+        {
+        }
+
+        /// <inheritdoc/>
+        public SqlBuilder(IDbConnection connection, InterpolatedSqlBuilderOptions? options = null) : base(connection, options)
+        {
+        }
+
+        /// <inheritdoc/>
+        public SqlBuilder(IDbConnection cnn, FormattableString command, InterpolatedSqlBuilderOptions? options = null) : base(cnn, command, options)
+        {
+        }
+
+        /// <inheritdoc/>
+        public SqlBuilder(IDbConnection cnn, InterpolatedSqlBuilder command, InterpolatedSqlBuilderOptions? options = null) : base(cnn, options)
+        {
+        }
+        #endregion
+
     }
 }

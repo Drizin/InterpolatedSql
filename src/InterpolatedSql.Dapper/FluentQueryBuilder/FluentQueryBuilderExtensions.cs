@@ -8,10 +8,10 @@
         /// <summary>
         /// Any Interpolated Sql (even if not complete) that is being built by a FluentQueryBuilder (and is hidden by the Fluent interfaces) can be cast to the concrete type.
         /// </summary>
-        public static FluentQueryBuilder AsDapperFluentQueryBuilder<T>(this IInterpolatedSql<T> statement)
-            where T : FluentQueryBuilder
+        public static T AsDapperFluentQueryBuilder<T>(this IInterpolatedSql<T> statement)
+            where T : FluentQueryBuilder<T>
         {
-            return (FluentQueryBuilder)statement;
+            return (T)statement;
         }
 
         /// <summary>
