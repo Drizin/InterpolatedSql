@@ -13,16 +13,13 @@ namespace InterpolatedSql.FluentQueryBuilder
     /// </summary>
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public class FluentQueryBuilder<T>
-        : QueryBuilder<T>, //TODO: should we inherit directly from InterpolatedSqlBuilder<T> and duplicate code from QueryBuilder<T>?
+        : QueryBuilder<T>,
         IFluentQueryBuilder<T>
     
         where T : QueryBuilder<T>, IFluentQueryBuilder<T>
     {
 
         #region Members
-        private readonly InterpolatedSqlBuilder _groupBy = new InterpolatedSqlBuilder();
-        private readonly InterpolatedSqlBuilder _having = new InterpolatedSqlBuilder();
-        private readonly InterpolatedSqlBuilder _orderBy = new InterpolatedSqlBuilder();
         private int? _rowCount = null;
         private int? _offset = null;
         private bool _isSelectDistinct = false;
@@ -105,9 +102,7 @@ namespace InterpolatedSql.FluentQueryBuilder
         /// </summary>
         public IGroupByBuilder<T> GroupBy(FormattableString groupBy)
         {
-            if (!_groupBy.IsEmpty)
-                _groupBy.AppendLiteral(", ");
-            _groupBy.Append(groupBy);
+            base.GroupBy(groupBy);
             return this;
         }
 
@@ -116,9 +111,7 @@ namespace InterpolatedSql.FluentQueryBuilder
         /// </summary>
         public IGroupByHavingBuilder<T> Having(FormattableString having)
         {
-            if (!_having.IsEmpty)
-                _having.AppendLiteral(", ");
-            _having.Append(having);
+            base.Having(having);
             return this;
         }
 
@@ -127,9 +120,7 @@ namespace InterpolatedSql.FluentQueryBuilder
         /// </summary>
         public IOrderByBuilder<T> OrderBy(FormattableString orderBy)
         {
-            if (!_orderBy.IsEmpty)
-                _orderBy.AppendLiteral(", ");
-            _orderBy.Append(orderBy);
+            base.OrderBy(orderBy);
             return this;
         }
 
@@ -192,6 +183,7 @@ namespace InterpolatedSql.FluentQueryBuilder
 
                 _cachedCombinedQuery = new InterpolatedSqlBuilder(Options);
 
+                //TODO: except for some parts (like DISTINCT, *, OFFSET) this is very similar to base class QueryBuilder
                 _cachedCombinedQuery.AppendLiteral("SELECT ").AppendLiteral(_isSelectDistinct ? "DISTINCT " : "");
                 if (_selects.IsEmpty)
                     _cachedCombinedQuery.AppendLiteral("*");

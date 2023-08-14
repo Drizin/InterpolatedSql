@@ -80,9 +80,9 @@ namespace InterpolatedSql.Dapper
 
         #region Overrides
         /// <inheritdoc />
-        protected override void PurgeParametersCache()
+        protected override void ClearParametersCache()
         {
-            base.PurgeParametersCache();
+            base.ClearParametersCache();
             _cachedDapperParameters = null;
         }
 

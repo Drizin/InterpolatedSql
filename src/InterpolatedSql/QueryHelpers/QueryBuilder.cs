@@ -15,14 +15,13 @@ namespace InterpolatedSql
         where T : QueryBuilder<T>
     {
         #region Members
-        protected readonly Filters _filters = new Filters();
-        protected readonly InterpolatedSqlBuilder _froms = new InterpolatedSqlBuilder();
         protected readonly InterpolatedSqlBuilder _selects = new InterpolatedSqlBuilder();
+        protected readonly InterpolatedSqlBuilder _froms = new InterpolatedSqlBuilder();
+        protected readonly Filters _filters = new Filters();
+        protected readonly InterpolatedSqlBuilder _groupBy = new InterpolatedSqlBuilder();
+        protected readonly InterpolatedSqlBuilder _having = new InterpolatedSqlBuilder();
+        protected readonly InterpolatedSqlBuilder _orderBy = new InterpolatedSqlBuilder();
         protected InterpolatedSqlBuilder? _cachedCombinedQuery = null;
-
-        // HACK: QueryBuilder inherits from InterpolatedSqlBuilder to offer the Fluent API, but its final command should combine multiple blocks
-        // since base class methods use Format, in some moments (including in the constructor) we should NOT return the combined command
-        private bool _shouldBuildCombinedQuery = false;
 
         /// <summary>
         /// How a list of Filters are combined (AND operator or OR operator)
@@ -43,7 +42,6 @@ namespace InterpolatedSql
         /// </summary>
         public QueryBuilder() : base()
         {
-            _shouldBuildCombinedQuery = true;
         }
 
         /// <summary>
@@ -68,7 +66,6 @@ namespace InterpolatedSql
         /// </param>
         public QueryBuilder(FormattableString query) : base(query)
         {
-            _shouldBuildCombinedQuery = true;
         }
 
         /// <summary>
@@ -84,7 +81,6 @@ namespace InterpolatedSql
         public QueryBuilder(IDbConnection connection, FormattableString query) : this(query)
         {
             DbConnection = connection;
-            _shouldBuildCombinedQuery = true;
         }
         #endregion
 
@@ -92,23 +88,23 @@ namespace InterpolatedSql
         /// <summary>
         /// Adds a new condition to where clauses.
         /// </summary>
-        public virtual QueryBuilder<T> Where(Filter filter)
+        public virtual T Where(Filter filter)
         {
             _filters.Add(filter);
-            PurgeLiteralCache();
-            PurgeParametersCache();
-            return this;
+            ClearLiteralCache();
+            ClearParametersCache();
+            return (T)this;
         }
 
         /// <summary>
         /// Adds a new condition to where clauses.
         /// </summary>
-        public virtual QueryBuilder<T> Where(Filters filters)
+        public virtual T Where(Filters filters)
         {
             _filters.Add(filters);
-            PurgeLiteralCache();
-            PurgeParametersCache();
-            return this;
+            ClearLiteralCache();
+            ClearParametersCache();
+            return (T)this;
         }
 
 
@@ -116,7 +112,7 @@ namespace InterpolatedSql
         /// Adds a new condition to where clauses. <br />
         /// Parameters embedded using string-interpolation will be automatically captured into <see cref="SqlParameters"/>.
         /// </summary>
-        public virtual QueryBuilder<T> Where(FormattableString filter)
+        public virtual T Where(FormattableString filter)
         {
             return Where(new Filter(filter));
         }
@@ -153,44 +149,39 @@ namespace InterpolatedSql
 
                 InterpolatedSqlBuilder combinedQuery;
 
+                // An initial template may or may not have been provided
                 if (_format.Length > 0)
                 {
-                    _shouldBuildCombinedQuery = false;
                     combinedQuery = new InterpolatedSqlBuilder(Options, new StringBuilder(_format.Length).Append(_format), _sqlParameters.ToList());
-                    _shouldBuildCombinedQuery = true;
                 }
                 else
                     combinedQuery = new InterpolatedSqlBuilder(Options);
 
-                if (_filters.Any())
+                if (_selects.Sql?.Length > 0)
                 {
-                    var filters = GetFilters()!;
+                    _selects.TrimEnd();
 
-                    string matchKeyword;
-                    int matchPos;
-                    if (((matchKeyword = "/**where**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                        ((matchKeyword = "{where}")     != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
+                    if (_selects.Sql?.Length > 0)
                     {
-                        // Template has a Placeholder for Filters
-                        filters.InsertLiteral(0, "WHERE ");
-                        combinedQuery.Remove(matchPos, matchKeyword.Length);
-                        combinedQuery.Insert(matchPos, filters);
-                    }
-                    else if (((matchKeyword = "/**filters**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                             ((matchKeyword = "{filters}")     != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                    {
-                        // Template has a Placeholder for Filters
-                        filters.InsertLiteral(0, "AND ");
-                        combinedQuery.Remove(matchPos, matchKeyword.Length);
-                        combinedQuery.Insert(matchPos, filters);
-                    }
-                    else
-                    {
-                        //TODO: if Query Template was provided, check if Template ends with "WHERE" or "WHERE 1=1" or "WHERE 0=0", or "WHERE 1=1 AND", etc. remove all that and replace.
-                        // else...
-                        //TODO: if Query Template was provided, check if Template ends has WHERE with real conditions... set hasWhereConditions=true 
-                        // else...
-                        combinedQuery.Append(filters);
+                        string matchKeyword;
+                        int matchPos;
+                        if (((matchKeyword = "/**select**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
+                            ((matchKeyword = "{select}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
+                        {
+                            // Template has a Placeholder for SELECT
+                            _selects.InsertLiteral(0, "SELECT ");
+                            combinedQuery.Remove(matchPos, matchKeyword.Length);
+                            combinedQuery.Insert(matchPos, _selects);
+                        }
+                        else if (((matchKeyword = "/**selects**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
+                                ((matchKeyword = "{selects}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
+                        {
+                            // Template has a placeholder for SELECTS - which means that
+                            // SELECT should be already in template and user just wants to add more columns using "selects" placeholder
+                            _selects.InsertLiteral(0, ", ");
+                            combinedQuery.Remove(matchPos, matchKeyword.Length);
+                            combinedQuery.Insert(matchPos, _selects);
+                        }
                     }
                 }
 
@@ -216,33 +207,119 @@ namespace InterpolatedSql
                     }
                 }
 
-                if (_selects.Sql?.Length > 0)
+                if (_filters.Any())
                 {
-                    _selects.TrimEnd();
+                    var filters = GetFilters()!;
 
-                    if (_selects.Sql?.Length > 0)
+                    string matchKeyword;
+                    int matchPos;
+                    if (((matchKeyword = "/**where**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
+                        ((matchKeyword = "{where}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
                     {
-                        string matchKeyword;
-                        int matchPos;
-                        if (((matchKeyword = "/**select**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                            ((matchKeyword = "{select}")     != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                        {
-                            // Template has a Placeholder for SELECT
-                            _selects.InsertLiteral(0, "SELECT ");
-                            combinedQuery.Remove(matchPos, matchKeyword.Length);
-                            combinedQuery.Insert(matchPos, _selects);
-                        }
-                        else if (((matchKeyword = "/**selects**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                                ((matchKeyword = "{selects}")      != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                        {
-                            // Template has a placeholder for SELECTS - which means that
-                            // SELECT should be already in template and user just wants to add more columns using "selects" placeholder
-                            _selects.InsertLiteral(0, ", ");
-                            combinedQuery.Remove(matchPos, matchKeyword.Length);
-                            combinedQuery.Insert(matchPos, _selects);
-                        }
+                        // Template has a Placeholder for Filters
+                        filters.InsertLiteral(0, "WHERE ");
+                        combinedQuery.Remove(matchPos, matchKeyword.Length);
+                        combinedQuery.Insert(matchPos, filters);
+                    }
+                    else if (((matchKeyword = "/**filters**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
+                             ((matchKeyword = "{filters}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
+                    {
+                        // Template has a Placeholder for Filters
+                        filters.InsertLiteral(0, "AND ");
+                        combinedQuery.Remove(matchPos, matchKeyword.Length);
+                        combinedQuery.Insert(matchPos, filters);
+                    }
+                    else
+                    {
+                        //TODO: if Query Template was provided, check if Template ends with "WHERE" or "WHERE 1=1" or "WHERE 0=0", or "WHERE 1=1 AND", etc. remove all that and replace.
+                        // else...
+                        //TODO: if Query Template was provided, check if Template ends has WHERE with real conditions... set hasWhereConditions=true 
+                        // else...
+                        combinedQuery.Append(filters);
                     }
                 }
+
+                if (!_groupBy.IsEmpty)
+                {
+                    string matchKeyword;
+                    int matchPos;
+                    if (((matchKeyword = "/**groupby**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
+                        ((matchKeyword = "{groupby}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
+                    {
+                        // Template has a Placeholder for GROUP BY
+                        _groupBy.InsertLiteral(0, "GROUP BY ");
+                        combinedQuery.Remove(matchPos, matchKeyword.Length);
+                        combinedQuery.Insert(matchPos, _groupBy);
+                    }
+                    else if (((matchKeyword = "/**groupby_additional**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
+                             ((matchKeyword = "{groupby_additional}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
+                    {
+                        // Template has a Placeholder for "adding more columns to" GROUP BY
+                        _groupBy.InsertLiteral(0, ", ");
+                        combinedQuery.Remove(matchPos, matchKeyword.Length);
+                        combinedQuery.Insert(matchPos, _groupBy);
+                    }
+                    else
+                    {
+                        combinedQuery.AppendLiteral("GROUP BY ");
+                        combinedQuery.Append(_groupBy);
+                    }
+                }
+
+                if (!_having.IsEmpty)
+                {
+                    string matchKeyword;
+                    int matchPos;
+                    if (((matchKeyword = "/**having**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
+                        ((matchKeyword = "{having}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
+                    {
+                        // Template has a Placeholder for HAVING
+                        _having.InsertLiteral(0, "HAVING ");
+                        combinedQuery.Remove(matchPos, matchKeyword.Length);
+                        combinedQuery.Insert(matchPos, _having);
+                    }
+                    else if (((matchKeyword = "/**having_additional**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
+                             ((matchKeyword = "{having_additional}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
+                    {
+                        // Template has a Placeholder for "adding more columns to" HAVING
+                        _having.InsertLiteral(0, ", ");
+                        combinedQuery.Remove(matchPos, matchKeyword.Length);
+                        combinedQuery.Insert(matchPos, _having);
+                    }
+                    else
+                    {
+                        combinedQuery.AppendLiteral("HAVING ");
+                        combinedQuery.Append(_having);
+                    }
+                }
+
+                if (!_orderBy.IsEmpty)
+                {
+                    string matchKeyword;
+                    int matchPos;
+                    if (((matchKeyword = "/**orderby**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
+                        ((matchKeyword = "{orderby}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
+                    {
+                        // Template has a Placeholder for ORDER BY
+                        _orderBy.InsertLiteral(0, "ORDER BY ");
+                        combinedQuery.Remove(matchPos, matchKeyword.Length);
+                        combinedQuery.Insert(matchPos, _orderBy);
+                    }
+                    else if (((matchKeyword = "/**orderby_additional**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
+                             ((matchKeyword = "{orderby_additional}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
+                    {
+                        // Template has a Placeholder for "adding more columns to" ORDER BY
+                        _orderBy.InsertLiteral(0, ", ");
+                        combinedQuery.Remove(matchPos, matchKeyword.Length);
+                        combinedQuery.Insert(matchPos, _orderBy);
+                    }
+                    else
+                    {
+                        combinedQuery.AppendLiteral("ORDER BY ");
+                        combinedQuery.Append(_orderBy);
+                    }
+                }
+
 
                 _cachedCombinedQuery = combinedQuery;
                 return _cachedCombinedQuery;
@@ -251,16 +328,16 @@ namespace InterpolatedSql
         #endregion
 
         /// <inheritdoc />
-        public override IReadOnlyList<InterpolatedSqlParameter> SqlParameters => _shouldBuildCombinedQuery ? CombinedQuery.SqlParameters : base.SqlParameters;
+        public override IReadOnlyList<InterpolatedSqlParameter> SqlParameters => Initializing ? base.SqlParameters : CombinedQuery.SqlParameters;
 
         /// <inheritdoc />
-        public override string Format => _shouldBuildCombinedQuery ? CombinedQuery.Format : base.Format;
+        public override string Format => Initializing ? base.Format : CombinedQuery.Format;
 
         /// <inheritdoc />
-        protected override void PurgeLiteralCache()
+        protected override void ClearLiteralCache()
         {
             _cachedCombinedQuery = null;
-            base.PurgeLiteralCache();
+            base.ClearLiteralCache();
         }
 
         #endregion
@@ -269,33 +346,33 @@ namespace InterpolatedSql
         /// <summary>
         /// Adds a new join to the FROM clause.
         /// </summary>
-        public virtual QueryBuilder<T> From(ref InterpolatedSqlHandler value)
+        public virtual T From(ref InterpolatedSqlHandler value)
         {
             _froms.Append(value.InterpolatedSqlBuilder);
             _froms.AppendLiteral(NewLine); //TODO: bool AutoLineBreaks
-            PurgeLiteralCache();
-            PurgeParametersCache();
-            return this;
+            ClearLiteralCache();
+            ClearParametersCache();
+            return (T)this;
         }
 #endif
 
         /// <summary>
         /// Adds a new join to the FROM clause.
         /// </summary>
-        public virtual QueryBuilder<T> From(LegacyFormattableString fromString)
+        public virtual T From(LegacyFormattableString fromString)
         {
             _froms.Append(fromString);
             _froms.AppendLiteral(NewLine); //TODO: bool AutoLineBreaks
-            PurgeLiteralCache();
-            PurgeParametersCache();
-            return this;
+            ClearLiteralCache();
+            ClearParametersCache();
+            return (T)this;
         }
 
 #if NET6_0_OR_GREATER
         /// <summary>
         /// Adds a new column to the SELECT clause.
         /// </summary>
-        public virtual QueryBuilder<T> Select(ref InterpolatedSqlHandler value)
+        public virtual T Select(ref InterpolatedSqlHandler value)
         {
             if (!_selects.IsEmpty)
                 _selects.AppendLiteral(", ");
@@ -303,16 +380,16 @@ namespace InterpolatedSql
                 _selects.AppendLiteral(value.InterpolatedSqlBuilder.Format);
             else
                 _selects.Append(value.InterpolatedSqlBuilder);
-            PurgeLiteralCache();
-            PurgeParametersCache();
-            return this;
+            ClearLiteralCache();
+            ClearParametersCache();
+            return (T)this;
         }
 #endif
 
         /// <summary>
         /// Adds a new column to the SELECT clause.
         /// </summary>
-        public virtual QueryBuilder<T> Select(LegacyFormattableString selectString)
+        public virtual T Select(LegacyFormattableString selectString)
         {
             if (!_selects.IsEmpty)
                 _selects.AppendLiteral(", ");
@@ -320,10 +397,114 @@ namespace InterpolatedSql
                 _selects.AppendLiteral(((FormattableString)selectString).Format);
             else
                 _selects.Append(selectString);
-            PurgeLiteralCache();
-            PurgeParametersCache();
-            return this;
+            ClearLiteralCache();
+            ClearParametersCache();
+            return (T)this;
         }
+
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Adds a new column to the GROUP BY clause.
+        /// </summary>
+        public virtual T GroupBy(ref InterpolatedSqlHandler value)
+        {
+            if (!_groupBy.IsEmpty)
+                _groupBy.AppendLiteral(", ");
+            if (value.InterpolatedSqlBuilder.SqlParameters.Count == 0) // if it's just a plain string, then it's programmatic (not user input) so it's safe
+                _groupBy.AppendLiteral(value.InterpolatedSqlBuilder.Format);
+            else
+                _groupBy.Append(value.InterpolatedSqlBuilder);
+            ClearLiteralCache();
+            ClearParametersCache();
+            return (T)this;
+        }
+#endif
+
+        /// <summary>
+        /// Adds a new column to the GROUP BY clause.
+        /// </summary>
+        public virtual T GroupBy(LegacyFormattableString selectString)
+        {
+            if (!_groupBy.IsEmpty)
+                _groupBy.AppendLiteral(", ");
+            if (((FormattableString)selectString).ArgumentCount == 0) // if it's just a plain string, then it's programmatic (not user input) so it's safe
+                _groupBy.AppendLiteral(((FormattableString)selectString).Format);
+            else
+                _groupBy.Append(selectString);
+            ClearLiteralCache();
+            ClearParametersCache();
+            return (T)this;
+        }
+
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Adds a new column to the HAVING clause.
+        /// </summary>
+        public virtual T Having(ref InterpolatedSqlHandler value)
+        {
+            if (!_having.IsEmpty)
+                _having.AppendLiteral(", ");
+            if (value.InterpolatedSqlBuilder.SqlParameters.Count == 0) // if it's just a plain string, then it's programmatic (not user input) so it's safe
+                _having.AppendLiteral(value.InterpolatedSqlBuilder.Format);
+            else
+                _having.Append(value.InterpolatedSqlBuilder);
+            ClearLiteralCache();
+            ClearParametersCache();
+            return (T)this;
+        }
+#endif
+
+        /// <summary>
+        /// Adds a new column to the HAVING clause.
+        /// </summary>
+        public virtual T Having(LegacyFormattableString selectString)
+        {
+            if (!_having.IsEmpty)
+                _having.AppendLiteral(", ");
+            if (((FormattableString)selectString).ArgumentCount == 0) // if it's just a plain string, then it's programmatic (not user input) so it's safe
+                _having.AppendLiteral(((FormattableString)selectString).Format);
+            else
+                _having.Append(selectString);
+            ClearLiteralCache();
+            ClearParametersCache();
+            return (T)this;
+        }
+
+
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Adds a new column to the ORDER BY clause.
+        /// </summary>
+        public virtual T OrderBy(ref InterpolatedSqlHandler value)
+        {
+            if (!_orderBy.IsEmpty)
+                _orderBy.AppendLiteral(", ");
+            if (value.InterpolatedSqlBuilder.SqlParameters.Count == 0) // if it's just a plain string, then it's programmatic (not user input) so it's safe
+                _orderBy.AppendLiteral(value.InterpolatedSqlBuilder.Format);
+            else
+                _orderBy.Append(value.InterpolatedSqlBuilder);
+            ClearLiteralCache();
+            ClearParametersCache();
+            return (T)this;
+        }
+#endif
+
+        /// <summary>
+        /// Adds a new column to the ORDER BY clause.
+        /// </summary>
+        public virtual T OrderBy(LegacyFormattableString selectString)
+        {
+            if (!_orderBy.IsEmpty)
+                _orderBy.AppendLiteral(", ");
+            if (((FormattableString)selectString).ArgumentCount == 0) // if it's just a plain string, then it's programmatic (not user input) so it's safe
+                _orderBy.AppendLiteral(((FormattableString)selectString).Format);
+            else
+                _orderBy.Append(selectString);
+            ClearLiteralCache();
+            ClearParametersCache();
+            return (T)this;
+        }
+
 
     }
 

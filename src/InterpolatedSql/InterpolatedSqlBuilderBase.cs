@@ -74,14 +74,16 @@ namespace InterpolatedSql
 
         /// <summary>
         /// Optional associated DbConnection. Can be used in custom extensions.
-        /// (but instead of using this nullable property please consider creating a subtype and hiding it with a non-nullable property - see InterpolatedSql.Dapper.SqlBuilder)
+        /// (but instead of using this nullable property please consider creating a subclass and hiding it with a non-nullable property - see InterpolatedSql.Dapper.SqlBuilder)
         /// </summary>
         public IDbConnection? DbConnection { get; set; }
 
         /// <summary>
-        /// Object bag - can be used in custom extensions (but consider creating a subtype instead of using this)
+        /// Object bag - can be used in custom extensions (but consider creating a subclass instead of using this)
         /// </summary>
-        public Dictionary<string, object>? ObjectBag { get; set; }
+        public Dictionary<string, object> ObjectBag => _objectBag ??= new Dictionary<string, object>();
+
+        private Dictionary<string, object>? _objectBag = null;
 
         /// <summary>
         /// By default this is <see cref="Environment.NewLine"/>
@@ -150,6 +152,12 @@ namespace InterpolatedSql
         /// <inheritdoc cref="SqlParametersDebugPreview" />
         protected string? _cachedSqlParameters = null;
 
+        /// <summary>
+        /// Subclasses may override important properties like <see cref="Format"/> and <see cref="SqlParameters"/> to dynamically build combined queries
+        /// This property indicates that parent constructor is still initializing (loading an initial provided template), 
+        /// and in this case the subclasses probably will NOT want to transform the underlying format
+        /// </summary>
+        protected bool Initializing { get; private set; } = false;
 
 
         #endregion
@@ -177,7 +185,13 @@ namespace InterpolatedSql
         {
             // This constructor gets a FormattableString to be immediately parsed, and therefore it can be important to provide Options (and Parser) immediately together
             if (value != null)
+            {
+                Initializing = true;
                 Options.Parser.ParseAppend(value, this);
+                Initializing = false;
+                ClearLiteralCache();
+                ClearParametersCache();
+            }
         }
 
 #if NET6_0_OR_GREATER
@@ -373,8 +387,8 @@ namespace InterpolatedSql
             if (Options.PreserveArgumentFormatting && !string.IsNullOrEmpty(format))
                 _format.Append(":").Append(format);
             _format.Append("}");
-            PurgeLiteralCache();
-            PurgeParametersCache();
+            ClearLiteralCache();
+            ClearParametersCache();
         }
 
         /// <summary>
@@ -435,7 +449,7 @@ namespace InterpolatedSql
                     }
                 }
             }
-            PurgeLiteralCache();
+            ClearLiteralCache();
 
             if (Options.AutoFixSingleQuotes)
             {
@@ -451,7 +465,7 @@ namespace InterpolatedSql
         public virtual void AppendRaw(string value)
         {
             _format.Append(value);
-            PurgeLiteralCache();
+            ClearLiteralCache();
         }
 
         /// <summary>
@@ -495,7 +509,7 @@ namespace InterpolatedSql
 
             // anything else (including nextChar == null, which means it's a parameter - which will probably be written a "@p0")
             AppendRaw(" ");
-            PurgeLiteralCache();
+            ClearLiteralCache();
         }
 
         // From https://stackoverflow.com/questions/1359948/why-doesnt-stringbuilder-have-indexof-method  - it's a shame that StringBuilder has Replace but does not have IndexOf
@@ -571,7 +585,7 @@ namespace InterpolatedSql
             if (!value.SqlParameters.Any())
             {
                 _format.Insert(index, value.Format);
-                PurgeLiteralCache();
+                ClearLiteralCache();
                 return;
             }
 
@@ -604,8 +618,8 @@ namespace InterpolatedSql
 
             // if (index < _format.Length-1) then the placeholder positions might become out of order - but that's fine
             _format.Insert(index, newFormat);
-            PurgeLiteralCache();
-            PurgeParametersCache();
+            ClearLiteralCache();
+            ClearParametersCache();
         }
 
         /// <summary>
@@ -614,7 +628,7 @@ namespace InterpolatedSql
         public virtual void InsertLiteral(int index, string value)
         {
             _format.Insert(index, value);
-            PurgeLiteralCache();
+            ClearLiteralCache();
         }
 
 
@@ -625,7 +639,7 @@ namespace InterpolatedSql
         public virtual void Remove(int startIndex, int length)
         {
             _format.Remove(startIndex, length);
-            PurgeLiteralCache();
+            ClearLiteralCache();
         }
 
         /// <summary>
@@ -670,7 +684,7 @@ namespace InterpolatedSql
 
             if (i < _format.Length - 1)
                 _format.Length = i + 1;
-            PurgeLiteralCache();
+            ClearLiteralCache();
         }
 
         /// <summary>
@@ -686,7 +700,7 @@ namespace InterpolatedSql
         /// Purges stringbuilder cached variables (some of which are only used for debugger display)
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected virtual void PurgeLiteralCache()
+        protected virtual void ClearLiteralCache()
         {
             _cachedFormat = null;
             _cachedSql = null;
@@ -696,7 +710,7 @@ namespace InterpolatedSql
         /// Purges Parameters cache (only used for debugger display)
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected virtual void PurgeParametersCache()
+        protected virtual void ClearParametersCache()
         {
             _cachedSqlParameters = null;
         }
