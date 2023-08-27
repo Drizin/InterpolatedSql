@@ -1,7 +1,5 @@
-using InterpolatedSql;
 using NUnit.Framework;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -19,7 +17,9 @@ namespace InterpolatedSql.Dapper.Tests
         public SqlBuilderTests() { } // nunit requires parameterless constructor
         public SqlBuilderTests(bool reuseIdenticalParameters)
         {
-            InterpolatedSqlBuilder.DefaultOptions.ReuseIdenticalParameters = reuseIdenticalParameters;
+            InterpolatedSql.Dapper.SqlBuilder.DefaultOptions.ReuseIdenticalParameters = 
+            InterpolatedSql.Dapper.QueryBuilder.DefaultOptions.ReuseIdenticalParameters =
+            reuseIdenticalParameters;
         }
 
         #region Setup
@@ -120,7 +120,11 @@ ORDER BY [ProductId]", query.Sql);
         {
             string productName = "%mountain%";
             int subCategoryId = 12;
-
+#if NET6_0_OR_GREATER
+            var query2 = cn
+                .SqlBuilder($@"SELECT * FROM [Production].[Product]")
+                .Append($"WHERE");
+#endif
             var query = cn
                 .SqlBuilder($@"SELECT * FROM [Production].[Product]")
                 .Append($"WHERE")
@@ -399,7 +403,7 @@ AND [ProductSubcategoryID]=@p1 ORDER BY @p2", query.Sql);
             query.Append($"OR [ProductCategoryID]={subCategoryId}");
             query.Append($"OR [ProductCategoryID]={categoryId})");
 
-            if (InterpolatedSqlBuilder.DefaultOptions.ReuseIdenticalParameters)
+            if (query.Options.ReuseIdenticalParameters)
             {
                 Assert.AreEqual(@"SELECT * FROM [table1] WHERE ([Name]=@p0 or [Author]=@p0"
                     + " or [Creator]=@p0)"
@@ -431,42 +435,42 @@ AND [ProductSubcategoryID]=@p1 ORDER BY @p2", query.Sql);
         [Test]
         public void TestRepeatedParameters2()
         {
-            if (!InterpolatedSqlBuilder.DefaultOptions.ReuseIdenticalParameters)
+            if (!InterpolatedSql.Dapper.SqlBuilder.DefaultOptions.ReuseIdenticalParameters)
                 return;
 
-        	int? fileId = null;
-        	string backupFileName = null;
-        	var folderKey = 93572;
-        	var secureFileName = "upload.txt";
-        	var uploadDate = DateTime.Now;
-        	string description = null;
-        	int? size = null;
-        	var cacheId = new Guid("{95b94695-b7ec-4e3a-9260-f815cceb5ff1}");
-        	var version = new Guid("{95b94695-b7ec-4e3a-9260-f815cceb5ff1}");
-        	var user = "terry.aney";
-        	var contentType = "application/pdf";
-        	var folder = "btr.aney.terry";
+            int? fileId = null;
+            string backupFileName = null;
+            var folderKey = 93572;
+            var secureFileName = "upload.txt";
+            var uploadDate = DateTime.Now;
+            string description = null;
+            int? size = null;
+            var cacheId = new Guid("{95b94695-b7ec-4e3a-9260-f815cceb5ff1}");
+            var version = new Guid("{95b94695-b7ec-4e3a-9260-f815cceb5ff1}");
+            var user = "terry.aney";
+            var contentType = "application/pdf";
+            var folder = "btr.aney.terry";
 
-        	var query = cn.SqlBuilder($@"DECLARE @fKey int; SET @fKey = {fileId};
+            var query = cn.SqlBuilder($@"DECLARE @fKey int; SET @fKey = {fileId};
 DECLARE @backupFileName VARCHAR(1); SET @backupFileName = {backupFileName};
 IF @backupFileName IS NOT NULL BEGIN
-	UPDATE [File] SET Name = @backupFileName WHERE UID = @fKey;
-	SET @fKey = NULL;
+    UPDATE [File] SET Name = @backupFileName WHERE UID = @fKey;
+    SET @fKey = NULL;
 END
 IF @fKey IS NULL BEGIN
-	INSERT INTO [File] ( Folder, Name, CreateTime, Description )
-	VALUES ( {folderKey}, {secureFileName}, {uploadDate}, {description} )
-	SELECT @fKey = SCOPE_IDENTITY();
+    INSERT INTO [File] ( Folder, Name, CreateTime, Description )
+    VALUES ( {folderKey}, {secureFileName}, {uploadDate}, {description} )
+    SELECT @fKey = SCOPE_IDENTITY();
 END ELSE BEGIN
-	-- File Existed
-	UPDATE [File] SET Deleted = 0, Description = ISNULL({description}, Description) WHERE UID = @fKey
+    -- File Existed
+    UPDATE [File] SET Deleted = 0, Description = ISNULL({description}, Description) WHERE UID = @fKey
 END
 DECLARE @size int; SET @size = {size};
 -- File was compressed during upload so the 'original' file size is wrong and need to query the length of the content
 IF @size IS NULL BEGIN
-	SELECT @size = DATALENGTH( Content )
-	FROM Cache
-	WHERE UID = {cacheId}
+    SELECT @size = DATALENGTH( Content )
+    FROM Cache
+    WHERE UID = {cacheId}
 END
 INSERT INTO Version ( [File], VersionID, Time, UploadedBy, ContentType, Size, VersionIndex, DataLockerToken )
 VALUES ( @fKey, {version}, {uploadDate}, {user}, {contentType}, @size, 0, {cacheId} )
@@ -474,26 +478,26 @@ INSERT INTO [Log] ( Action, FolderName, FileName, VersionId, VersionIndex, [User
 VALUES ( 'I', {folder}, {secureFileName}, {version}, 0, {user}, @size, {uploadDate} )
 SELECT @fKey");
 
-        	Assert.AreEqual(@"DECLARE @fKey int; SET @fKey = @p0;
+            Assert.AreEqual(@"DECLARE @fKey int; SET @fKey = @p0;
 DECLARE @backupFileName VARCHAR(1); SET @backupFileName = @p0;
 IF @backupFileName IS NOT NULL BEGIN
-	UPDATE [File] SET Name = @backupFileName WHERE UID = @fKey;
-	SET @fKey = NULL;
+    UPDATE [File] SET Name = @backupFileName WHERE UID = @fKey;
+    SET @fKey = NULL;
 END
 IF @fKey IS NULL BEGIN
-	INSERT INTO [File] ( Folder, Name, CreateTime, Description )
-	VALUES ( @p1, @p2, @p3, @p0 )
-	SELECT @fKey = SCOPE_IDENTITY();
+    INSERT INTO [File] ( Folder, Name, CreateTime, Description )
+    VALUES ( @p1, @p2, @p3, @p0 )
+    SELECT @fKey = SCOPE_IDENTITY();
 END ELSE BEGIN
-	-- File Existed
-	UPDATE [File] SET Deleted = 0, Description = ISNULL(@p0, Description) WHERE UID = @fKey
+    -- File Existed
+    UPDATE [File] SET Deleted = 0, Description = ISNULL(@p0, Description) WHERE UID = @fKey
 END
 DECLARE @size int; SET @size = @p0;
 -- File was compressed during upload so the 'original' file size is wrong and need to query the length of the content
 IF @size IS NULL BEGIN
-	SELECT @size = DATALENGTH( Content )
-	FROM Cache
-	WHERE UID = @p4
+    SELECT @size = DATALENGTH( Content )
+    FROM Cache
+    WHERE UID = @p4
 END
 INSERT INTO Version ( [File], VersionID, Time, UploadedBy, ContentType, Size, VersionIndex, DataLockerToken )
 VALUES ( @fKey, @p4, @p3, @p5, @p6, @size, 0, @p4 )
@@ -501,14 +505,14 @@ INSERT INTO [Log] ( Action, FolderName, FileName, VersionId, VersionIndex, [User
 VALUES ( 'I', @p7, @p2, @p4, 0, @p5, @size, @p3 )
 SELECT @fKey", query.Sql);
 
-        	Assert.AreEqual(query.DapperParameters.Get<int?>("p0"), null);
-        	Assert.AreEqual(query.DapperParameters.Get<int>("p1"), folderKey);
-        	Assert.AreEqual(query.DapperParameters.Get<string>("p2"), secureFileName);
-        	Assert.AreEqual(query.DapperParameters.Get<DateTime>("p3"), uploadDate);
-        	Assert.AreEqual(query.DapperParameters.Get<Guid>("p4"), cacheId);
-        	Assert.AreEqual(query.DapperParameters.Get<string>("p5"), user);
-        	Assert.AreEqual(query.DapperParameters.Get<string>("p6"), contentType);
-        	Assert.AreEqual(query.DapperParameters.Get<string>("p7"), folder);
+            Assert.AreEqual(query.DapperParameters.Get<int?>("p0"), null);
+            Assert.AreEqual(query.DapperParameters.Get<int>("p1"), folderKey);
+            Assert.AreEqual(query.DapperParameters.Get<string>("p2"), secureFileName);
+            Assert.AreEqual(query.DapperParameters.Get<DateTime>("p3"), uploadDate);
+            Assert.AreEqual(query.DapperParameters.Get<Guid>("p4"), cacheId);
+            Assert.AreEqual(query.DapperParameters.Get<string>("p5"), user);
+            Assert.AreEqual(query.DapperParameters.Get<string>("p6"), contentType);
+            Assert.AreEqual(query.DapperParameters.Get<string>("p7"), folder);
         }
 
         [Test]
@@ -531,7 +535,7 @@ SELECT @fKey", query.Sql);
             qb.Append($"{"A"}"); // @p21 should reuse @p0
             qb.Append($"{"B"}"); // @p22 should reuse @p1
 
-            if (InterpolatedSqlBuilder.DefaultOptions.ReuseIdenticalParameters)
+            if (qb.Options.ReuseIdenticalParameters)
                 Assert.AreEqual("@p0,@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9,@p10,@p11,@p12,@p13,@p14,@p14,@p15,@p16,@p17,@p18,@p19,@p20,@p0 @p1", qb.Sql);
             else
                 Assert.AreEqual("@p0,@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9,@p10,@p11,@p12,@p13,@p14,@p15,@p16,@p17,@p18,@p19,@p20,@p21,@p22 @p23", qb.Sql);
@@ -568,7 +572,7 @@ SELECT @fKey", query.Sql);
             qb.Append($"{"A"}"); // @p20 should reuse @p0
             qb.Append($"{"B"}"); // @p21 should reuse @p1
 
-            if (InterpolatedSqlBuilder.DefaultOptions.ReuseIdenticalParameters)
+            if (qb.Options.ReuseIdenticalParameters)
                 Assert.AreEqual("@p0 @p1 @p2 @p3 @p4 @p5 @p6 @p7 @p8 @p9 @p10 @p11 @p12 @p13 @p14 @p15 @p16 @p17 @p18 @p19 @p0 @p1", qb.Sql);
             else
                 Assert.AreEqual("@p0 @p1 @p2 @p3 @p4 @p5 @p6 @p7 @p8 @p9 @p10 @p11 @p12 @p13 @p14 @p15 @p16 @p17 @p18 @p19 @p20 @p21", qb.Sql);
@@ -591,7 +595,7 @@ SELECT @fKey", query.Sql);
                 cmd.Append($"DELETE FROM Orders WHERE OrderId = {orderId}; ");
             cmd.Append($"INSERT INTO Logs (Action, UserId, Description) VALUES ({action}, {orderId}, {description}); ");
 
-            if (InterpolatedSqlBuilder.DefaultOptions.ReuseIdenticalParameters)
+            if (cmd.Options.ReuseIdenticalParameters)
             {
                 Assert.AreEqual(cmd.DapperParameters.Count, 3);
                 Assert.AreEqual(cmd.DapperParameters.Get<int>("p0"), orderId);
@@ -619,7 +623,7 @@ SELECT @fKey", query.Sql);
 
             query.From($"INNER JOIN [Table2] on [Table1].Table2Id=[Table2].Id and [Table2].Name={joinParam}");
 
-            Assert.AreEqual("SELECT * FROM [Table1] INNER JOIN [Table2] on [Table1].Table2Id=[Table2].Id and [Table2].Name=@p1 WHERE [Table1].[Name] LIKE @p0", query.Sql);
+            Assert.AreEqual("SELECT * FROM [Table1] INNER JOIN [Table2] on [Table1].Table2Id=[Table2].Id and [Table2].Name=@p1 WHERE [Table1].[Name] LIKE @p0", query.Build().Sql);
         }
 
         [Test]
@@ -635,7 +639,7 @@ SELECT @fKey", query.Sql);
                 .From($"INNER JOIN [Table2] on [Table1].Table2Id=[Table2].Id and [Table2].Name={joinParam}");
 
             Assert.AreEqual(@"SELECT * FROM [Table1]
-INNER JOIN [Table2] on [Table1].Table2Id=[Table2].Id and [Table2].Name=@p1 WHERE [Table1].[Name] LIKE @p0", query.Sql);
+INNER JOIN [Table2] on [Table1].Table2Id=[Table2].Id and [Table2].Name=@p1 WHERE [Table1].[Name] LIKE @p0", query.Build().Sql);
         }
 
         [Test]
@@ -655,7 +659,7 @@ FROM
     *
     , 'Test' as AnotherColumn, 'Test2' as AnotherColumn2 
 FROM 
-    [Table1]", query.Sql);
+    [Table1]", query.Build().Sql);
         }
 
         [Test]
@@ -693,11 +697,11 @@ declare @v23 nvarchar(10)={v}
 select 'ok'
 ";
 
-            QueryBuilder query = cn.QueryBuilder(script);
+            var query = cn.QueryBuilder(script).Build();
             var s = query.Sql;
             var p = query.DapperParameters;
 
-            if (InterpolatedSqlBuilder.DefaultOptions.ReuseIdenticalParameters)
+            if (InterpolatedSql.Dapper.QueryBuilder.DefaultOptions.ReuseIdenticalParameters)
             {
                 Assert.AreEqual(@"
 declare @v1 nvarchar(10)=@p0

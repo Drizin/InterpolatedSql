@@ -43,7 +43,7 @@ ORDER BY ProductId
                 + $@"SELECT * FROM [Production].[Product]"
                 + $"WHERE [Name] LIKE {search}";
             cmd += $"AND 1=1";
-            Assert.AreEqual("SELECT * FROM [Production].[Product] WHERE [Name] LIKE @p0 AND 1=1", cmd.Sql);
+            Assert.AreEqual("SELECT * FROM [Production].[Product] WHERE [Name] LIKE @p0 AND 1=1", cmd.Build().Sql);
         }
 
         [Test]
@@ -60,15 +60,18 @@ ORDER BY ProductId
             q.Where($"[Weight] <= {maxWeight}");
             q.Where($"[Name] LIKE {search}");
 
-            Assert.AreEqual(expected, q.Sql);
-            Assert.That(q.DapperParameters.ParameterNames.Contains("p0"));
-            Assert.That(q.DapperParameters.ParameterNames.Contains("p1"));
-            Assert.That(q.DapperParameters.ParameterNames.Contains("p2"));
-            Assert.AreEqual(q.DapperParameters.Get<int>("p0"), maxPrice);
-            Assert.AreEqual(q.DapperParameters.Get<int>("p1"), maxWeight);
-            Assert.AreEqual(q.DapperParameters.Get<string>("p2"), search);
+            var cmd = q.Build();
 
-            var products = q.Query<Product>();
+            Assert.AreEqual(expected, cmd.Sql);
+            Assert.That(cmd.DapperParameters.ParameterNames.Contains("p0"));
+            Assert.That(cmd.DapperParameters.ParameterNames.Contains("p1"));
+            Assert.That(cmd.DapperParameters.ParameterNames.Contains("p2"));
+            Assert.AreEqual(cmd.DapperParameters.Get<int>("p0"), maxPrice);
+            Assert.AreEqual(cmd.DapperParameters.Get<int>("p1"), maxWeight);
+            Assert.AreEqual(cmd.DapperParameters.Get<string>("p2"), search);
+
+            var products = q.Build().Query<Product>();
+            products = q.Query<Product>();
 
             Assert.That(products.Any());
         }
@@ -103,10 +106,14 @@ ORDER BY ProductId
                 new Filter($"[Name] LIKE {search}")
             });
 
-            DynamicParameters parms = new DynamicParameters();
-            string where = filters.BuildFilters(parms);
+            var whereClause = filters.Build();
+            var parms = ParametersDictionary.LoadFrom(whereClause);
+            // ParametersDictionary implements Dapper.SqlMapper.IDynamicParameters - so it can be passed directly to Dapper
+            // But if you want to add to an existing Dapper.DynamicParameters you can do it:
+            //foreach (var parameter in parms)
+            //    SqlParameterMapper.Default.AddToDynamicParameters(dynamicParms, parameter.Value);
 
-            Assert.AreEqual(@"WHERE ([ListPrice] >= @p0 AND [ListPrice] <= @p1) AND ([Weight] <= @p2 OR [Name] LIKE @p3)", where);
+            Assert.AreEqual(@"WHERE ([ListPrice] >= @p0 AND [ListPrice] <= @p1) AND ([Weight] <= @p2 OR [Name] LIKE @p3)", whereClause.Sql);
 
             Assert.AreEqual(4, parms.ParameterNames.Count());
             Assert.AreEqual(minPrice, parms.Get<int>("p0"));
@@ -120,7 +127,7 @@ ORDER BY ProductId
         {
             int orgId = 123;
             FormattableString innerQuery = $"SELECT Id, Name FROM SomeTable where OrganizationId={orgId}";
-            var q = cn.QueryBuilder($"SELECT FROM ({innerQuery}) a join AnotherTable b on a.Id=b.Id where b.OrganizationId={321}");
+            var q = cn.QueryBuilder($"SELECT FROM ({innerQuery}) a join AnotherTable b on a.Id=b.Id where b.OrganizationId={321}").Build();
 
             Assert.AreEqual("SELECT FROM (SELECT Id, Name FROM SomeTable where OrganizationId=@p0) a join AnotherTable b on a.Id=b.Id where b.OrganizationId=@p1", q.Sql);
 
@@ -137,7 +144,7 @@ ORDER BY ProductId
             int orgId = 123;
             FormattableString otherColumns = $"{"111111111"} AS {"ssn":raw}";
             FormattableString innerQuery = $"SELECT Id, Name, {otherColumns} FROM SomeTable where OrganizationId={orgId}";
-            var q = cn.QueryBuilder($"SELECT FROM ({innerQuery}) a join AnotherTable b on a.Id=b.Id where b.OrganizationId={321}");
+            var q = cn.QueryBuilder($"SELECT FROM ({innerQuery}) a join AnotherTable b on a.Id=b.Id where b.OrganizationId={321}").Build();
 
             Assert.AreEqual("SELECT FROM (SELECT Id, Name, @p0 AS ssn FROM SomeTable where OrganizationId=@p1) a join AnotherTable b on a.Id=b.Id where b.OrganizationId=@p2", q.Sql);
 
@@ -154,7 +161,7 @@ ORDER BY ProductId
             string val2 = "val2";
             FormattableString condition = $"col3 = {val2}";
 
-            var q = cn.QueryBuilder($@"SELECT col1, {val1} as col2 FROM Table1 WHERE {condition}");
+            var q = cn.QueryBuilder($@"SELECT col1, {val1} as col2 FROM Table1 WHERE {condition}").Build();
 
             Assert.AreEqual("SELECT col1, @p0 as col2 FROM Table1 WHERE col3 = @p1", q.Sql);
 
@@ -170,7 +177,7 @@ ORDER BY ProductId
             string val2 = "val2";
             QueryBuilder condition = cn.QueryBuilder($"col3 = {val2}");
 
-            var q = cn.QueryBuilder($@"SELECT col1, {val1} as col2 FROM Table1 WHERE {condition}");
+            var q = cn.QueryBuilder($@"SELECT col1, {val1} as col2 FROM Table1 WHERE {condition}").Build();
 
             Assert.AreEqual("SELECT col1, @p0 as col2 FROM Table1 WHERE col3 = @p1", q.Sql);
 

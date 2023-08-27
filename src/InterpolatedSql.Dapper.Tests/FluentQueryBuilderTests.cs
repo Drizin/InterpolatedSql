@@ -222,10 +222,14 @@ WHERE ([ListPrice] >= @p0 AND [ListPrice] <= @p1) AND ([Weight] <= @p2 OR [Name]
                 new Filter($"[Name] LIKE {search}")
             });
 
-            DynamicParameters parms = new DynamicParameters();
-            string where = filters.BuildFilters(parms);
+            var whereClause = filters.Build();
+            var parms = ParametersDictionary.LoadFrom(whereClause);
+            // ParametersDictionary implements Dapper.SqlMapper.IDynamicParameters - so it can be passed directly to Dapper
+            // But if you want to add to an existing Dapper.DynamicParameters you can do it:
+            //foreach (var parameter in parms)
+            //    SqlParameterMapper.Default.AddToDynamicParameters(dynamicParms, parameter.Value);
 
-            Assert.AreEqual(@"WHERE ([ListPrice] >= @p0 AND [ListPrice] <= @p1) AND ([Weight] <= @p2 OR [Name] LIKE @p3)", where);
+            Assert.AreEqual(@"WHERE ([ListPrice] >= @p0 AND [ListPrice] <= @p1) AND ([Weight] <= @p2 OR [Name] LIKE @p3)", whereClause.Sql);
 
             Assert.AreEqual(4, parms.ParameterNames.Count());
             Assert.AreEqual(minPrice, parms.Get<int>("p0"));
@@ -323,7 +327,8 @@ HAVING COUNT(*)>@p0";
             var finalQuery = cn
                 .QueryBuilder($"SELECT * FROM [Sales].[SalesOrderDetail]")
                 .Append($"WHERE [ProductId] IN ({productsSubQuery})")
-                .Append($"AND [SalesOrderId] IN ({customerOrdersSubQuery})");
+                .Append($"AND [SalesOrderId] IN ({customerOrdersSubQuery})")
+                .Build();
 
             string expected =
                 @"SELECT * FROM [Sales].[SalesOrderDetail] WHERE [ProductId] IN (SELECT ProductId

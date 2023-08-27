@@ -19,7 +19,7 @@ namespace InterpolatedSql.Dapper
         {
             if (command.InterpolatedSqlBuilder.Options.AutoAdjustMultilineString)
                 command.AdjustMultilineString();
-            return new SqlBuilder(cnn, command.InterpolatedSqlBuilder);
+            return new SqlBuilder(cnn, command.InterpolatedSqlBuilder.AsFormattableString());
         }
         /// <summary>
         /// Creates a new SqlBuilder over current connection
@@ -30,7 +30,7 @@ namespace InterpolatedSql.Dapper
         {
             if (command.InterpolatedSqlBuilder.Options.AutoAdjustMultilineString)
                 command.AdjustMultilineString();
-            return new SqlBuilder(cnn, command.InterpolatedSqlBuilder);
+            return new SqlBuilder(cnn, command.InterpolatedSqlBuilder.AsFormattableString());
         }
 
 #else

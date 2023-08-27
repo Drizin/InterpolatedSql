@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netframework461;net5.0;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>netframework461;net5.0;net6.0</TargetFrameworks>
 		<IsPackable>false</IsPackable>
 		<Company>Rick Drizin</Company>
 		<Copyright>Rick Drizin</Copyright>
@@ -16,7 +16,7 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
 		<PackageReference Include="nunit" Version="3.13.3" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
-		<PackageReference Include="NUnit3TestAdapter" Version="4.0.0" />
+		<PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
 	</ItemGroup>
 
 	<ItemGroup>

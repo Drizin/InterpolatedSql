@@ -3,7 +3,7 @@
 namespace InterpolatedSql
 {
     /// <summary>
-    /// Creates <see cref="InterpolatedSqlBuilder"/>
+    /// Creates <see cref="SqlBuilder"/>
     /// </summary>
     public class InterpolatedSqlFactory
     {
@@ -11,31 +11,85 @@ namespace InterpolatedSql
         /// <summary>
         /// Creates a new InterpolatedSqlBuilder using an InterpolatedStringHandler.
         /// </summary>
-        public virtual InterpolatedSqlBuilder Create(ref InterpolatedSqlHandler value)
+        public virtual B Create<B>(ref InterpolatedSqlHandler<B> value)
+            where B : IInterpolatedSqlBuilder
         {
             if (value.InterpolatedSqlBuilder.Options.AutoAdjustMultilineString)
                 value.AdjustMultilineString();
-            return (InterpolatedSqlBuilder)value.InterpolatedSqlBuilder;
+            return (B)value.InterpolatedSqlBuilder;
         }
 
         /// <summary>
         /// Creates a new InterpolatedSqlBuilder using an InterpolatedStringHandler.
         /// </summary>
-        public virtual InterpolatedSqlBuilder Create(InterpolatedSqlBuilderOptions options, [System.Runtime.CompilerServices.InterpolatedStringHandlerArgument("options")] ref InterpolatedSqlHandler value)
+        public virtual SqlBuilder Create(ref InterpolatedSqlHandler<SqlBuilder> value)
         {
             if (value.InterpolatedSqlBuilder.Options.AutoAdjustMultilineString)
                 value.AdjustMultilineString();
-            return (InterpolatedSqlBuilder) value.InterpolatedSqlBuilder;
+            return (SqlBuilder)value.InterpolatedSqlBuilder;
+        }
+
+        /// <summary>
+        /// Creates a new InterpolatedSqlBuilder using an InterpolatedStringHandler.
+        /// </summary>
+        public virtual B Create<B>(InterpolatedSqlBuilderOptions options, [System.Runtime.CompilerServices.InterpolatedStringHandlerArgument("options")] ref InterpolatedSqlHandler<B> value)
+            where B : IInterpolatedSqlBuilder
+        {
+            if (value.InterpolatedSqlBuilder.Options.AutoAdjustMultilineString)
+                value.AdjustMultilineString();
+            return (B) value.InterpolatedSqlBuilder;
+        }
+
+        /// <summary>
+        /// Creates a new InterpolatedSqlBuilder using an InterpolatedStringHandler.
+        /// </summary>
+        public virtual SqlBuilder Create(InterpolatedSqlBuilderOptions options, [System.Runtime.CompilerServices.InterpolatedStringHandlerArgument("options")] ref InterpolatedSqlHandler<SqlBuilder> value)
+        {
+            if (value.InterpolatedSqlBuilder.Options.AutoAdjustMultilineString)
+                value.AdjustMultilineString();
+            return (SqlBuilder) value.InterpolatedSqlBuilder;
         }
 #else
         /// <summary>
         /// Creates a new InterpolatedSqlBuilder using regular expression for parsing the FormattableString. 
         /// </summary>
-        public virtual InterpolatedSqlBuilder Create(FormattableString source)
+        public virtual B Create<B>(FormattableString source)
+            where B : IInterpolatedSqlBuilder
         {
-            var target = new InterpolatedSqlBuilder();
-            Parser.ParseAppend(source, target);
-            return target;
+            B builder = InterpolatedSqlBuilderFactory.Default.Create<B>();
+            Parser.ParseAppend(builder, source);
+            return builder;
+        }
+
+        /// <summary>
+        /// Creates a new InterpolatedSqlBuilder using regular expression for parsing the FormattableString. 
+        /// </summary>
+        public virtual IInterpolatedSqlBuilder Create(FormattableString source)
+        {
+            var builder = InterpolatedSqlBuilderFactory.Default.Create();
+            Parser.ParseAppend(builder, source);
+            return builder;
+        }
+
+        /// <summary>
+        /// Creates a new InterpolatedSqlBuilder using regular expression for parsing the FormattableString. 
+        /// </summary>
+        public virtual B Create<B>(InterpolatedSqlBuilderOptions options, FormattableString source)
+            where B : IInterpolatedSqlBuilder
+        {
+            B builder = InterpolatedSqlBuilderFactory.Default.Create<B>(options);
+            Parser.ParseAppend(builder, source);
+            return builder;
+        }
+
+        /// <summary>
+        /// Creates a new InterpolatedSqlBuilder using regular expression for parsing the FormattableString. 
+        /// </summary>
+        public virtual IInterpolatedSqlBuilder Create(InterpolatedSqlBuilderOptions options, FormattableString source)
+        {
+            var builder = InterpolatedSqlBuilderFactory.Default.Create(options);
+            Parser.ParseAppend(builder, source);
+            return builder;
         }
 #endif
 

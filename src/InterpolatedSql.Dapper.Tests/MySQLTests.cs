@@ -1,4 +1,5 @@
 ﻿using global::Dapper;
+using InterpolatedSql.Tests;
 using MySql.Data.MySqlClient;
 using NUnit.Framework;
 using System;
@@ -41,7 +42,7 @@ namespace InterpolatedSql.Dapper.Tests
         public void TestParameters()
         {
             string search = "%as%";
-            var authors = cn.QueryBuilder($"SELECT * FROM authors WHERE name_last like {search}").Query<Author>();
+            var authors = cn.QueryBuilder($"SELECT * FROM authors WHERE name_last like {search}").Build().Query<Author>();
             Assert.That(authors.Any());
             Assert.AreEqual(cn.PreviousCommands.Last().CommandText, "SELECT * FROM authors WHERE name_last like @p0");
         }
@@ -55,7 +56,7 @@ namespace InterpolatedSql.Dapper.Tests
                 "de Assis",
             };
 
-            var authors = cn.QueryBuilder($"SELECT * FROM authors WHERE name_last IN {lastNames}").Query<Author>();
+            var authors = cn.QueryBuilder($"SELECT * FROM authors WHERE name_last IN {lastNames}").Build().Query<Author>();
             Assert.That(authors.Any());
             Assert.AreEqual(cn.PreviousCommands.Last().CommandText, "SELECT * FROM authors WHERE name_last IN (@parray01,@parray02)");
         }
@@ -65,7 +66,7 @@ namespace InterpolatedSql.Dapper.Tests
         {
             int[]? ids = new[] { 1, 2 };
 
-            var authors = cn.QueryBuilder($"SELECT * FROM authors WHERE author_id IN {ids}").Query<Author>();
+            var authors = cn.QueryBuilder($"SELECT * FROM authors WHERE author_id IN {ids}").Build().Query<Author>();
             Assert.That(authors.Any());
 
             string[]? lastNames = new string[]
@@ -74,11 +75,11 @@ namespace InterpolatedSql.Dapper.Tests
                 "de Assis",
             };
 
-            authors = cn.QueryBuilder($"SELECT * FROM authors WHERE name_last IN {lastNames}").Query<Author>();
+            authors = cn.QueryBuilder($"SELECT * FROM authors WHERE name_last IN {lastNames}").Build().Query<Author>();
             Assert.AreEqual(cn.PreviousCommands.Last().CommandText, "SELECT * FROM authors WHERE name_last IN (@parray01,@parray02)");
 
             AuthorsEnum[]? authorIds = new AuthorsEnum[] { AuthorsEnum.Kafka, AuthorsEnum.MachadoDeAssis };
-            authors = cn.QueryBuilder($"SELECT * FROM authors WHERE author_id IN {authorIds}").Query<Author>();
+            authors = cn.QueryBuilder($"SELECT * FROM authors WHERE author_id IN {authorIds}").Build().Query<Author>();
             Assert.That(authors.Any());
             Assert.AreEqual(cn.PreviousCommands.Last().CommandText, "SELECT * FROM authors WHERE author_id IN (@parray01,@parray02)");
 
