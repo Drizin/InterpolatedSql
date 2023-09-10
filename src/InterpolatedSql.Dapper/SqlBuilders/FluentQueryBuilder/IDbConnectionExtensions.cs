@@ -1,12 +1,12 @@
 ﻿using System.Data;
-using InterpolatedSql.FluentQueryBuilder;
+using InterpolatedSql.SqlBuilders.FluentQueryBuilder;
 
-namespace InterpolatedSql.Dapper.FluentQueryBuilder
+namespace InterpolatedSql.Dapper.SqlBuilders.FluentQueryBuilder
 {
     /// <summary>
     /// Extends IDbConnection to easily build QueryBuilder or FluentQueryBuilder
     /// </summary>
-    public static partial class IDbConnectionExtensions //TODO: all factories here could be delegated to a Factory class, so that we can replace the factory
+    public static partial class IDbConnectionExtensions
     {
         #region Fluent Query Builder
         /// <summary>
@@ -14,7 +14,7 @@ namespace InterpolatedSql.Dapper.FluentQueryBuilder
         /// </summary>
         /// <param name="cnn"></param>
         public static IEmptyQueryBuilder<
-            InterpolatedSql.Dapper.FluentQueryBuilder.IFluentQueryBuilder,
+            InterpolatedSql.Dapper.SqlBuilders.FluentQueryBuilder.IFluentQueryBuilder,
             SqlBuilder, 
             IDapperSqlCommand
             > FluentQueryBuilder(this IDbConnection cnn)

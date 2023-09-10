@@ -1,11 +1,11 @@
 ﻿using System.Data;
 
-namespace InterpolatedSql.Dapper.FluentQueryBuilder
+namespace InterpolatedSql.Dapper.SqlBuilders.FluentQueryBuilder
 {
     public interface IFluentQueryBuilder 
-        : InterpolatedSql.FluentQueryBuilder.IFluentQueryBuilder<IFluentQueryBuilder, SqlBuilder, IDapperSqlCommand>, 
-        IQueryBuilder<IFluentQueryBuilder, SqlBuilder, IDapperSqlCommand>, 
-        IInterpolatedSqlBuilder<IFluentQueryBuilder, IDapperSqlCommand>, 
+        : InterpolatedSql.SqlBuilders.FluentQueryBuilder.IFluentQueryBuilder<IFluentQueryBuilder, SqlBuilder, IDapperSqlCommand>, 
+        IQueryBuilder<IFluentQueryBuilder, SqlBuilder, IDapperSqlCommand>,
+        InterpolatedSql.SqlBuilders.ISqlBuilder<IFluentQueryBuilder, IDapperSqlCommand>, 
         IBuildable<IDapperSqlCommand>
     {
         //ParametersDictionary DapperParameters { get; }

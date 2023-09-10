@@ -1,10 +1,12 @@
 ﻿using NUnit.Framework;
 using System.Data;
 using System;
+using InterpolatedSql.Dapper.SqlBuilders;
 
 namespace InterpolatedSql.Dapper.Tests
 {
-    public class MyQueryBuilder : InterpolatedSql.Dapper.QueryBuilder<MyQueryBuilder, SqlBuilder, IDapperSqlCommand>
+    /// <see cref="ParentClass"/>
+    public class MyQueryBuilder : InterpolatedSql.Dapper.SqlBuilders.QueryBuilder<MyQueryBuilder, ISqlBuilder, IDapperSqlCommand>
     {
         public MyQueryBuilder(IDbConnection connection, FormattableString query) : base(opts => new SqlBuilder(connection, opts), (opts, format, arguments) => new SqlBuilder(connection, opts, format, arguments), connection, query)
         {
@@ -12,8 +14,8 @@ namespace InterpolatedSql.Dapper.Tests
         public MyQueryBuilder AppendCustomObject(FormattableString value, string key, string separator, string prefixBeforeFirstItem = "")
         {
             if (!ObjectBag!.ContainsKey(key))
-                ObjectBag[key] = new global::InterpolatedSql.SqlBuilder();
-            var builder = (IInterpolatedSqlBuilder)base.ObjectBag[key];
+                ObjectBag[key] = new InterpolatedSql.SqlBuilders.SqlBuilder();
+            var builder = (InterpolatedSql.SqlBuilders.SqlBuilder)base.ObjectBag[key];
             builder.AppendRaw(builder.IsEmpty ? prefixBeforeFirstItem : separator);
             builder.AppendFormattableString(value);
             return this;
@@ -25,7 +27,7 @@ namespace InterpolatedSql.Dapper.Tests
         public void ReplaceCustomObjects()
         {
             foreach(var key in base.ObjectBag!.Keys) 
-                this.Replace("/**" + key + "**/", ((global::InterpolatedSql.IInterpolatedSqlBuilderBase)base.ObjectBag![key]).Build());
+                this.Replace("/**" + key + "**/", ((InterpolatedSql.SqlBuilders.SqlBuilder)base.ObjectBag![key]).Build());
         }
     }
 

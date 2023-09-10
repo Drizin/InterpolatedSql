@@ -8,9 +8,9 @@ namespace InterpolatedSql.Dapper
 {
     /// <summary>
     /// IDapperSqlCommand are "commands ready to run" - this is where we extend those commands with Dapper facades
-    /// <see cref="global::InterpolatedSql.Dapper.SqlBuilder"/> is the most generic builder - and is always ready to run.
-    /// <see cref="global::InterpolatedSql.Dapper.QueryBuilder"/> is a builder with some helpers to build SELECT queries - and is always ready to run.
-    /// <see cref="global::InterpolatedSql.Dapper.FluentQueryBuilder.FluentQueryBuilder"/> is a step-by-step fluent builder - it is ready to run only in some stages of the builder
+    /// <see cref="InterpolatedSql.Dapper.SqlBuilders.InterpolatedSqlBuilder"/> is the most generic builder - and is always ready to run.
+    /// <see cref="InterpolatedSql.Dapper.SqlBuilders.QueryBuilder"/> is a builder with some helpers to build SELECT queries - and is always ready to run.
+    /// <see cref="InterpolatedSql.Dapper.SqlBuilders.FluentQueryBuilder.FluentQueryBuilder"/> is a step-by-step fluent builder - it is ready to run only in some stages of the builder
     /// </summary>
     public static partial class IDapperSqlCommandExtensions
     {

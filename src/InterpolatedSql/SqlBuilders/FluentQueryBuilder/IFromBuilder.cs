@@ -1,13 +1,13 @@
 ﻿using System;
 
-namespace InterpolatedSql.FluentQueryBuilder
+namespace InterpolatedSql.SqlBuilders.FluentQueryBuilder
 {
     /// <summary>
     /// Query Builder with one or more from clauses, which can still add more clauses to from
     /// </summary>
     public interface IFromBuilder<out U, out RB, out R>
         where U : IFluentQueryBuilder<U, RB, R>
-        where RB : IInterpolatedSqlBuilder<RB, R>
+        where RB : ISqlBuilder<RB, R>
         where R: class, IInterpolatedSql
     {
         /// <summary>

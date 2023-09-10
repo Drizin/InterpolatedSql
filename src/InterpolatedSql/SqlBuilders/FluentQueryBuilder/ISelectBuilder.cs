@@ -1,13 +1,13 @@
 ﻿using System;
 
-namespace InterpolatedSql.FluentQueryBuilder
+namespace InterpolatedSql.SqlBuilders.FluentQueryBuilder
 {
     /// <summary>
     /// Query Builder which is preparing a SELECT statement
     /// </summary>
     public interface ISelectBuilder<out U, out RB, out R>
         where U : IFluentQueryBuilder<U, RB, R>
-        where RB : IInterpolatedSqlBuilder<RB, R>
+        where RB : ISqlBuilder<RB, R>
         where R: class, IInterpolatedSql
     {
         /// <summary>

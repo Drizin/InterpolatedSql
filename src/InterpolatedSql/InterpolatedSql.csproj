@@ -8,7 +8,7 @@
 		<Description>SQL Builder using Fluent API and String Interpolation</Description>
 		<Copyright>Rick Drizin</Copyright>
 		<Company>Rick Drizin</Company>
-		<Version>2.0.0-beta2</Version>
+		<Version>2.0.0-beta3</Version>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<Title>InterpolatedSql</Title>
 		<PackageId>InterpolatedSql</PackageId>
@@ -20,7 +20,7 @@
 		<PackageReadmeFile>NuGetReadMe.md</PackageReadmeFile>
 		<AssemblyName>InterpolatedSql</AssemblyName>
 		<Nullable>enable</Nullable>
-		<LangVersion>8.0</LangVersion>
+		<LangVersion>9.0</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

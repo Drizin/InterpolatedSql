@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Text;
 
-namespace InterpolatedSql
+namespace InterpolatedSql.SqlBuilders
 {
     /// <summary>
     /// Filter statement defined in a single statement <br />

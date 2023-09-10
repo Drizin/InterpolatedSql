@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace InterpolatedSql.Dapper.Tests.DynamicCRUDTests
 {
@@ -130,7 +129,7 @@ namespace InterpolatedSql.Dapper.Tests.DynamicCRUDTests
             //Assert.AreEqual // "UPDATE [Production].[Product] SET\r\n[Name] = @Name,\r\n[ProductNumber] = @ProductNumber\r\nWHERE\r\n    [ProductID] = @ProductId"
 
             cmd.AddObjectProperties(p);
-            cmd.Execute();
+            cmd.Build().Execute();
         }
     }
 }

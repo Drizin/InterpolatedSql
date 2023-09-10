@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace InterpolatedSql.FluentQueryBuilder
+namespace InterpolatedSql.SqlBuilders.FluentQueryBuilder
 {
     /// <summary>
     /// FluentQueryBuilder is like <see cref="QueryBuilder{U, RB, R}"/> (an injection-safe dynamic SQL builder focused in building dynamic WHERE filters)
@@ -18,9 +17,10 @@ namespace InterpolatedSql.FluentQueryBuilder
     /// <typeparam name="R">Return Type</typeparam>
     public abstract class FluentQueryBuilder<U, RB, R> : QueryBuilder<U, RB,R>,
         IFluentQueryBuilder<U, RB, R>,
-        IBuildable<R>
-        where U : IFluentQueryBuilder<U, RB, R>, IQueryBuilder<U, RB, R>, IInterpolatedSqlBuilder<U, R>, IBuildable<R>
-        where RB : IInterpolatedSqlBuilder<RB, R>
+        IBuildable<R>,
+        ISqlEnricher
+        where U : IFluentQueryBuilder<U, RB, R>, IQueryBuilder<U, RB, R>, ISqlBuilder<U, R>, IBuildable<R>
+        where RB : ISqlBuilder<RB, R>
         where R: class, IInterpolatedSql
     {
 
@@ -48,7 +48,7 @@ namespace InterpolatedSql.FluentQueryBuilder
         }
         #endregion
 
-        #region Fluent API methods //TODO: should these be converted to explicit interface implementation?
+        #region Fluent API methods
         /// <summary>
         /// Adds one column to the select clauses
         /// </summary>
@@ -104,12 +104,12 @@ namespace InterpolatedSql.FluentQueryBuilder
         /// </summary>
         public IFromBuilder<U, RB, R> From(FormattableString from)
         {
-            var target = InterpolatedSqlBuilderFactory.Default.Create();
+            var target = SqlBuilderFactory.Default.Create();
             Options.Parser.ParseAppend(target, from);
             if (_froms.IsEmpty && !Regex.IsMatch(target.Format, "\\b FROM \\b", RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace))
                 target.InsertLiteral(0, "FROM ");
             // Copy of base.From(FormattableString)
-            _froms.Append(target.Build());
+            _froms.Append(target.AsSql());
             _froms.AppendLiteral(NewLine); 
             return this;
         }
@@ -162,9 +162,6 @@ namespace InterpolatedSql.FluentQueryBuilder
             return this;
         }
 
-        #endregion
-
-        #region Where overrides
         /// <summary>
         /// Adds a new condition to where clauses.
         /// </summary>
@@ -195,6 +192,11 @@ namespace InterpolatedSql.FluentQueryBuilder
         }
         #endregion
 
+        IInterpolatedSql ISqlEnricher.GetEnrichedSql()
+        {
+            return Build();
+        }
+
         /// <inheritdoc/>
         public override R Build()
         {
@@ -205,14 +207,13 @@ namespace InterpolatedSql.FluentQueryBuilder
             if (_selects.IsEmpty)
                 cachedCombinedQuery.AppendLiteral("*");
             else
-                cachedCombinedQuery.Append(_selects.Build());
-
+                cachedCombinedQuery.Append(_selects.AsSql());
 
 
             if (!_froms.IsEmpty)
             {
                 _froms.TrimEnd();
-                cachedCombinedQuery.AppendLine(_froms.Build()); //TODO: inner join and left/outer join shortcuts?
+                cachedCombinedQuery.AppendLine(_froms.AsSql()); //TODO: inner join and left/outer join shortcuts?
                 // TODO: AppendLine adds linebreak BEFORE the value - is that a little counterintuitive?
             }
 
@@ -220,25 +221,20 @@ namespace InterpolatedSql.FluentQueryBuilder
             if (_filters.Any())
             {
                 var filters = GetFilters()!;
-                cachedCombinedQuery.AppendLine().AppendLiteral("WHERE ").Append(filters.Build());
+                cachedCombinedQuery.AppendLine().AppendLiteral("WHERE ").Append(filters.AsSql());
             }
 
             if (!_groupBy.IsEmpty)
-                cachedCombinedQuery.AppendLine().AppendLiteral("GROUP BY").Append(_groupBy.Build());
+                cachedCombinedQuery.AppendLine().AppendLiteral("GROUP BY").Append(_groupBy.AsSql());
             if (!_having.IsEmpty)
-                cachedCombinedQuery.AppendLine().AppendLiteral("HAVING ").Append(_having.Build());
+                cachedCombinedQuery.AppendLine().AppendLiteral("HAVING ").Append(_having.AsSql());
             if (!_orderBy.IsEmpty)
-                cachedCombinedQuery.AppendLine().AppendLiteral("ORDER BY ").Append(_orderBy.Build());
+                cachedCombinedQuery.AppendLine().AppendLiteral("ORDER BY ").Append(_orderBy.AsSql());
             if (_rowCount != null)
                 cachedCombinedQuery.AppendLine().AppendLiteral("OFFSET ").AppendLiteral((_offset ?? 0).ToString())
                     .AppendLiteral($"ROWS FETCH NEXT {_rowCount} ROWS ONLY"); // TODO: PostgreSQL? "LIMIT row_count OFFSET offset"
 
             return cachedCombinedQuery.Build();
-        }
-
-        IInterpolatedSql IBuildable.Build()
-        {
-            return Build();
         }
 
     }

@@ -4,6 +4,8 @@ using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using InterpolatedSql.Dapper.SqlBuilders.Legacy;
+using InterpolatedSql.SqlBuilders;
 
 namespace InterpolatedSql.Dapper.Tests
 {
@@ -71,7 +73,6 @@ ORDER BY ProductId
             Assert.AreEqual(cmd.DapperParameters.Get<string>("p2"), search);
 
             var products = q.Build().Query<Product>();
-            products = q.Query<Product>();
 
             Assert.That(products.Any());
         }
@@ -175,7 +176,7 @@ ORDER BY ProductId
         {
             string val1 = "val1";
             string val2 = "val2";
-            QueryBuilder condition = cn.QueryBuilder($"col3 = {val2}");
+            var condition = cn.SqlBuilder($"col3 = {val2}");
 
             var q = cn.QueryBuilder($@"SELECT col1, {val1} as col2 FROM Table1 WHERE {condition}").Build();
 
@@ -195,6 +196,7 @@ ORDER BY ProductId
                 .Append($"test") // Append on QueryBuilder still returns a QueryBuilder
                 .Where($"test")
                 ;
+            Assert.AreEqual("SELECT test FROM test test WHERE test AND test", q.Build().Sql);
         }
 
 

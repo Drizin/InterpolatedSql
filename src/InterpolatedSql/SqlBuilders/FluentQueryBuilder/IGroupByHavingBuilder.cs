@@ -1,13 +1,13 @@
 ﻿using System;
 
-namespace InterpolatedSql.FluentQueryBuilder
+namespace InterpolatedSql.SqlBuilders.FluentQueryBuilder
 {
     /// <summary>
     /// Query Builder with one or more having clauses, which can still add more clauses to having
     /// </summary>
     public interface IGroupByHavingBuilder<out U, out RB, out R>
         where U : IFluentQueryBuilder<U, RB, R>
-        where RB : IInterpolatedSqlBuilder<RB, R>
+        where RB : ISqlBuilder<RB, R>
         where R: class, IInterpolatedSql
     {
 

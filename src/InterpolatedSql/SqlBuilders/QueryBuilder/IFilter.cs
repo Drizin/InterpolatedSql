@@ -1,4 +1,4 @@
-﻿namespace InterpolatedSql
+﻿namespace InterpolatedSql.SqlBuilders
 {
     /// <summary>
     /// Can be both individual filter or a list of filters.

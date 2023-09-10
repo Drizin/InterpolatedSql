@@ -1,16 +1,16 @@
 ﻿using System;
 
-namespace InterpolatedSql
+namespace InterpolatedSql.SqlBuilders
 {
     /// <inheritdoc cref="QueryBuilder{U, RB, R}"/>
-    public interface IQueryBuilder<U, RB, R>
+    public interface IQueryBuilder<U, RB, R> : IBuildable<R>
         where U : IQueryBuilder<U, RB, R>, IBuildable<R>
-        where RB : IInterpolatedSqlBuilder, IBuildable<R>
+        where RB : IInterpolatedSqlBuilderBase, IBuildable<R>
         where R : class, IInterpolatedSql
     {
         Filters.FiltersType FiltersType { get; set; }
 
-        IInterpolatedSqlBuilder? GetFilters();
+        IInterpolatedSqlBuilderBase? GetFilters();
         U Where(Filter filter);
         U Where(Filters filters);
         U Where(FormattableString filter);

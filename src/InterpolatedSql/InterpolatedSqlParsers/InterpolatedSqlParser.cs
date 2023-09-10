@@ -1,4 +1,5 @@
-﻿using System;
+﻿using InterpolatedSql.SqlBuilders;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Text.RegularExpressions;
 namespace InterpolatedSql
 {
     /// <summary>
-    /// Parses FormattableString into <see cref="SqlBuilder"/>
+    /// Parses FormattableString into <see cref="IInterpolatedSqlBuilderBase"/>
     /// </summary>
     public class InterpolatedSqlParser : IInterpolatedSqlParser
     {
@@ -200,18 +201,24 @@ namespace InterpolatedSql
                 return;
             }
 
-            if (argument is InterpolatedSql.IBuildable iTransf)
+            if (argument is ISqlEnricher enricher)
             {
-                target.Append(iTransf.Build()); // this will automatically shift the arguments
+                target.Append(enricher.GetEnrichedSql()); // this will automatically shift the arguments
                 return;
             }
 
             // If we get a nested FormattableString, we parse it (recursively) and merge it to current one
             if (argument is FormattableString fsArg)
             {
-                var nestedStatement = InterpolatedSqlBuilderFactory.Default.Create();
+                var nestedStatement = SqlBuilderFactory.Default.Create();
                 ParseAppend(nestedStatement, fsArg);
                 target.Append(nestedStatement.Build()); // this will automatically shift the arguments
+                return;
+            }
+
+            if (argument is InterpolatedSqlBuilderBase builder)
+            {
+                target.Append(builder.AsSql()); // this will automatically shift the arguments
                 return;
             }
 

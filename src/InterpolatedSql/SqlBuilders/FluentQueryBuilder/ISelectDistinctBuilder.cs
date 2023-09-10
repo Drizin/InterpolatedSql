@@ -1,13 +1,13 @@
 ﻿using System;
 
-namespace InterpolatedSql.FluentQueryBuilder
+namespace InterpolatedSql.SqlBuilders.FluentQueryBuilder
 {
     /// <summary>
     /// QueryBuilder which is preparing a SELECT DISTINCT statement
     /// </summary>
     public interface ISelectDistinctBuilder<out U, out RB, out R>
         where U : IFluentQueryBuilder<U, RB, R>
-        where RB : IInterpolatedSqlBuilder<RB, R>
+        where RB : ISqlBuilder<RB, R>
         where R: class, IInterpolatedSql
     {
         /// <summary>

@@ -3,33 +3,12 @@ using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace InterpolatedSql
+namespace InterpolatedSql.SqlBuilders
 {
-    /// <summary>
-    /// Dynamic SQL builder where SqlParameters are defined using string interpolation (but it's injection safe). This is the most important piece of the library.
-    ///
-    /// Parameters should just be embedded using interpolated objects, and they will be preserved (will not be mixed with the literals)
-    /// and will be parametrized when you need to run the command.
-    /// So it wraps the underlying SQL statement and the associated parameters, 
-    /// allowing to easily add new clauses to underlying statement and also add new parameters.
-    /// </summary>
-    /// <typeparam name="U">Recursive Generics: U Should be the same class that implements InterpolatedSqlBuilder{U}, or any other interface implemented by this class</typeparam>
-    /// <typeparam name="R">R Should be the type that this builder builds (type returned by Build()) - should implement IInterpolatedSql</typeparam>
-    /// <remarks>Fluent Builder with Recursive Generics - allows Fluent API to always return the same type U</remarks>
-    public abstract class InterpolatedSqlBuilder<U, R> : InterpolatedSqlBuilderBase, IInterpolatedSqlBuilder<U, R>, IBuildable
-        where U :  IInterpolatedSqlBuilder<U, R>
+    /// <inheritdoc />
+    public abstract class InterpolatedSqlBuilderBase<U, R> : InterpolatedSqlBuilderBase, IBuildable<R>, IInterpolatedSqlBuilderBase
         where R : class, IInterpolatedSql
     {
-
-        #region Static Members
-        /// <summary>
-        /// Default options used when options is not defined in constructor.
-        /// Note that since this a generic class (with generic types <typeparamref name="U"/> and <typeparamref name="R"/>) this static member will be different for different U/R types.
-        /// So if you're using a subclass (like InterpolatedSql.Dapper.SqlBuilder or InterpolatedSql.Dapper.QueryBuilder) you should define defaults specifically for that subclass.
-        /// </summary>
-        public static InterpolatedSqlBuilderOptions DefaultOptions { get; set; } = new InterpolatedSqlBuilderOptions();
-        #endregion
-
         #region Members
         /// <summary>
         /// Object bag - can be used in custom extensions (but consider creating a subclass instead of using this)
@@ -39,41 +18,21 @@ namespace InterpolatedSql
         private Dictionary<string, object>? _objectBag = null;
         #endregion
 
-        #region ctor
-        /// <inheritdoc />
-        protected InterpolatedSqlBuilder(InterpolatedSqlBuilderOptions? options, StringBuilder? format, List<InterpolatedSqlParameter>? arguments) : base(options ?? DefaultOptions, format, arguments)
-        {
-        }
+        #region ctors
 
         /// <inheritdoc />
-        public InterpolatedSqlBuilder(InterpolatedSqlBuilderOptions? options = null) : this(options: options, format: null, arguments: null)
+        protected InterpolatedSqlBuilderBase(InterpolatedSqlBuilderOptions? options, StringBuilder? format, List<InterpolatedSqlParameter>? arguments) : base(options, format, arguments)
         {
         }
-
-
-        /// <inheritdoc />
-        public InterpolatedSqlBuilder(FormattableString value, InterpolatedSqlBuilderOptions? options = null) : this(options: options)
-        {
-            // This constructor gets a FormattableString to be immediately parsed, and therefore it can be important to provide Options (and Parser) immediately together
-            if (value != null)
-            {
-                Options.Parser.ParseAppend(this, value);
-                ResetAutoSpacing(); // rearm after appending initial text
-            }
-        }
-
 #if NET6_0_OR_GREATER
         /// <inheritdoc />
-        public InterpolatedSqlBuilder(int literalLength, int formattedCount, InterpolatedSqlBuilderOptions? options = null) : base(literalLength, formattedCount, options ?? DefaultOptions)
+        public InterpolatedSqlBuilderBase(int literalLength, int formattedCount, InterpolatedSqlBuilderOptions? options = null) : base(literalLength, formattedCount, options)
         {
         }
 #endif
         #endregion
 
-        #region Methods
-        #endregion
-
-        #region Fluent Builder (all methods here should be public and return same type T)
+        #region Fluent Builder (all methods here should be public and return same type U)
 
         /// <inheritdoc/>
         public new U AppendLine()
@@ -268,7 +227,7 @@ namespace InterpolatedSql
         #region Conversions
 
         /// <inheritdoc cref="AppendFormattableString(FormattableString)"/>
-        public static U operator +(InterpolatedSqlBuilder<U, R> interpolatedString, FormattableString value)
+        public static U operator +(InterpolatedSqlBuilderBase<U, R> interpolatedString, FormattableString value)
         {
             interpolatedString.AppendFormattableString(value);
             interpolatedString.ResetAutoSpacing();
@@ -276,27 +235,11 @@ namespace InterpolatedSql
         }
 
         /// <inheritdoc cref="AppendFormattableString(FormattableString)"/>
-        public static U operator +(InterpolatedSqlBuilder<U, R> interpolatedString, IInterpolatedSql value)
+        public static U operator +(InterpolatedSqlBuilderBase<U, R> interpolatedString, IInterpolatedSql value)
         {
             interpolatedString.Append(value);
             interpolatedString.ResetAutoSpacing();
             return (U)(object)interpolatedString;
-        }
-
-        /// <summary>
-        /// For "bare" builders (like <see cref="SqlBuilder"/> or <see cref="SqlBuilder{T}"/>) this just returns the same instance,
-        /// but casted (through a wrapper) to <see cref="IInterpolatedSql"/> so you 
-        /// For "enricher" builders (classes that implement extend <see cref="IBuildable"/> and will transform the final sql statement
-        /// like <see cref="QueryBuilder"/> , <see cref="QueryBuilder{U, RB, R}"/>, <see cref="FluentQueryBuilder.FluentQueryBuilder{U, RB, R}"/>
-        /// then the builder will be "transformed" (usually creating a new instance which is the "enriched"/combined sql statement).
-        /// </summary>
-        public abstract R Build();
-
-        /// <inheritdoc cref="IBuildable.Build"/>
-        IInterpolatedSql IBuildable.Build() 
-        {
-            // Redirect IBuildable.Build() to the new abstract R Build()
-            return Build(); 
         }
 
         void IInterpolatedSqlBuilderBase.AppendLiteral(string value)
@@ -320,8 +263,8 @@ namespace InterpolatedSql
         }
 
         void IInterpolatedSqlBuilderBase.AppendFormattableString(FormattableString value)
-        { 
-            AppendFormattableString(value); 
+        {
+            AppendFormattableString(value);
         }
 
 #if NET6_0_OR_GREATER
@@ -357,5 +300,9 @@ namespace InterpolatedSql
 #endif
         #endregion
 
+
+
+        /// <inheritdoc cref="IBuildable{R}.Build"/>
+        public abstract R Build();
     }
 }

@@ -1,52 +1,63 @@
-﻿using System;
+﻿using InterpolatedSql.Dapper.SqlBuilders.InterpolatedSqlBuilder;
+using InterpolatedSql.SqlBuilders;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace InterpolatedSql.Dapper
+namespace InterpolatedSql.Dapper.SqlBuilders
 {
-    /// <summary>
-    /// InterpolatedSqlBuilder is a dynamic SQL builder (but injection safe) where SqlParameters are defined using string interpolation.
-    /// Parameters should just be embedded using interpolated objects, and they will be preserved (will not be mixed with the literals)
-    /// and will be parametrized when you need to run the command.
-    /// So it wraps the underlying SQL statement and the associated parameters, 
-    /// allowing to easily add new clauses to underlying statement and also add new parameters.
-    /// </summary>
-    public class SqlBuilder : SqlBuilder<SqlBuilder>
+    /// <inheritdoc/>
+    public class SqlBuilder : SqlBuilder<SqlBuilder, IDapperSqlCommand>, ISqlBuilder
     {
-        #region ctor
+        #region ctors
         /// <inheritdoc />
-        public SqlBuilder(IDbConnection connection, InterpolatedSqlBuilderOptions? options, StringBuilder? format, List<InterpolatedSqlParameter>? arguments)
-            : base(connection, options, format, arguments)
+        protected internal SqlBuilder(IDbConnection connection, InterpolatedSqlBuilderOptions? options, StringBuilder? format, List<InterpolatedSqlParameter>? arguments) : base(connection, options, format, arguments)
         {
+            DbConnection = connection;
         }
 
         /// <inheritdoc />
-        public SqlBuilder(IDbConnection connection, InterpolatedSqlBuilderOptions? options = null) : this(connection: connection, options: options, format: null, arguments: null)
+        public SqlBuilder(IDbConnection connection, InterpolatedSqlBuilderOptions? options = null) : base(connection, options)
         {
+            DbConnection = connection;
         }
 
 
         /// <inheritdoc />
-        public SqlBuilder(IDbConnection connection, FormattableString value, InterpolatedSqlBuilderOptions? options = null) : this(connection: connection, options: options)
+        public SqlBuilder(IDbConnection connection, FormattableString value, InterpolatedSqlBuilderOptions? options = null) : base(connection, value, options)
         {
-            // This constructor gets a FormattableString to be immediately parsed, and therefore it can be useful to provide Options (and Parser) immediately together
-            if (value != null)
-                Options.Parser.ParseAppend(this, value);
+            DbConnection = connection;
         }
 
 #if NET6_0_OR_GREATER
         /// <inheritdoc />
-        public SqlBuilder(int literalLength, int formattedCount, InterpolatedSqlBuilderOptions? options = null)
-            : base(literalLength, formattedCount, options)
+        public SqlBuilder(IDbConnection connection, int literalLength, int formattedCount, InterpolatedSqlBuilderOptions? options = null) : base(connection, literalLength, formattedCount, options)
         {
-
+            DbConnection = connection;
         }
 #endif
+        #endregion
+
+        #region Overrides
+        /// <inheritdoc />
+        public override IDapperSqlCommand Build()
+        {
+            return this.ToDapperSqlCommand();
+        }
+
+        /// <summary>
+        /// Like <see cref="InterpolatedSqlBuilderBase.ToSql"/>
+        /// </summary>
+        /// <returns></returns>
+        public IDapperSqlCommand ToDapperSqlCommand()
+        {
+            string format = _format.ToString();
+            return new ImmutableDapperCommand(this.DbConnection, BuildSql(format, _sqlParameters), format, _sqlParameters, _explicitParameters);
+        }
+
 
         #endregion
 
     }
-
-
 }

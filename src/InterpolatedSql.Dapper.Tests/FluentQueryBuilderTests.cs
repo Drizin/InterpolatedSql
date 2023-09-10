@@ -2,8 +2,8 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using Dapper;
-using InterpolatedSql.Dapper.FluentQueryBuilder;
+using InterpolatedSql.Dapper.SqlBuilders.FluentQueryBuilder;
+using InterpolatedSql.SqlBuilders;
 
 namespace InterpolatedSql.Dapper.Tests
 {

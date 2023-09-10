@@ -1,5 +1,5 @@
 ﻿using Dapper;
-using InterpolatedSql;
+using InterpolatedSql.SqlBuilders;
 using System;
 using System.Collections;
 using System.Collections.Generic;

@@ -1,13 +1,13 @@
 ﻿using System;
 
-namespace InterpolatedSql.FluentQueryBuilder
+namespace InterpolatedSql.SqlBuilders.FluentQueryBuilder
 {
     /// <summary>
     /// Query Builder with one or more clause in where, which can still add more clauses to where
     /// </summary>
     public interface IWhereBuilder<out U, out RB, out R>
         where U : IFluentQueryBuilder<U, RB, R>
-        where RB : IInterpolatedSqlBuilder<RB, R>
+        where RB : ISqlBuilder<RB, R>
         where R: class, IInterpolatedSql
     {
         /// <summary>

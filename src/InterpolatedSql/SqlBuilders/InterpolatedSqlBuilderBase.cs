@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace InterpolatedSql
+namespace InterpolatedSql.SqlBuilders
 {
     /// <summary>
     /// Dynamic SQL builder where SqlParameters are defined using string interpolation (but it's injection safe). This is the most important piece of the library.
@@ -18,7 +18,7 @@ namespace InterpolatedSql
     /// allowing to easily add new clauses to underlying statement and also add new parameters.
     /// </summary>
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public abstract class InterpolatedSqlBuilderBase : IInterpolatedSqlBuilderBase, IBuildable
+    public abstract class InterpolatedSqlBuilderBase : IInterpolatedSqlBuilderBase
     {
         #region Members
         /// <inheritdoc cref="InterpolatedSqlBuilderOptions"/>
@@ -69,7 +69,7 @@ namespace InterpolatedSql
 
         /// <summary>
         /// Optional associated DbConnection. 
-        /// <see cref="InterpolatedSqlBuilder{U, R}"/> will not enforce this value, but if defined it can be used by custom extensions.
+        /// <see cref="SqlBuilder{U, R}"/> will not enforce this value, but if defined it can be used by custom extensions.
         /// (but instead of using this nullable property please consider creating a subclass and hiding it with a non-nullable property - see InterpolatedSql.Dapper.SqlBuilder)
         /// </summary>
         public IDbConnection? DbConnection { get; set; }
@@ -140,12 +140,10 @@ namespace InterpolatedSql
         protected internal virtual int AddArgument(InterpolatedSqlParameter argument)
         {
             if (Options.ReuseIdenticalParameters && Options.ArgumentComparer != null)
-            {
                 // Reuse existing parameters (don't pass duplicates)
                 for (int i = 0; i < _sqlParameters.Count; i++)
                     if (Options.ArgumentComparer.Equals(_sqlParameters[i], argument))
                         return i;
-            }
 
             _sqlParameters.Add(argument);
             return _sqlParameters.Count - 1;
@@ -182,7 +180,7 @@ namespace InterpolatedSql
         /// </summary>
         public void Append(IInterpolatedSql value)
         {
-            value = (value as IBuildable)?.Build() ?? value;
+            value = (value as ISqlEnricher)?.GetEnrichedSql() ?? value;
             if (AutoSpacing && value.Format.Length > 0)
                 CheckAutoSpacing(value.Format[0]);
             Insert(_format.Length, value);
@@ -199,7 +197,7 @@ namespace InterpolatedSql
         {
             if (!condition)
                 return;
-            value = (value as IBuildable)?.Build() ?? value;
+            value = (value as ISqlEnricher)?.GetEnrichedSql() ?? value;
             if (AutoSpacing && value.Format.Length > 0)
                 CheckAutoSpacing(value.Format[0]);
             Insert(_format.Length, value);
@@ -214,7 +212,7 @@ namespace InterpolatedSql
         public void AppendLine(IInterpolatedSql value)
         {
             AppendLine();
-            value = (value as IBuildable)?.Build() ?? value;
+            value = (value as ISqlEnricher)?.GetEnrichedSql() ?? value;
             Insert(_format.Length, value);
         }
 
@@ -223,7 +221,7 @@ namespace InterpolatedSql
         /// Appends to this instance another interpolated string.
         /// Uses InterpolatedStringHandler (net6.0+) which can be a little faster than using regex.
         /// </summary>
-        public void Append([System.Runtime.CompilerServices.InterpolatedStringHandlerArgument("")] ref InterpolatedSqlHandler value)
+        public void Append([InterpolatedStringHandlerArgument("")] ref InterpolatedSqlHandler value)
         {
             // InterpolatedSqlHandler will get this InterpolatedStringBuilder instance
             // and will receive the literals/arguments to be appended to this instance.
@@ -238,7 +236,7 @@ namespace InterpolatedSql
         /// Uses InterpolatedStringHandler (net6.0+) which can be a little faster than using regex.
         /// If condition is false, interpolated string won't be parsed or appended.
         /// </summary>
-        public void AppendIf(bool condition, [System.Runtime.CompilerServices.InterpolatedStringHandlerArgument(new[] { "", "condition" })] ref InterpolatedSqlHandler value)
+        public void AppendIf(bool condition, [InterpolatedStringHandlerArgument(new[] { "", "condition" })] ref InterpolatedSqlHandler value)
         {
             // InterpolatedSqlHandler will get this InterpolatedStringBuilder instance, and will also get the bool condition.
             // If condition is false, InterpolatedSqlHandler will just early-abort.
@@ -258,7 +256,7 @@ namespace InterpolatedSql
             if (Options.AutoAdjustMultilineString)
                 value.AdjustMultilineString();
             AppendLine();
-            Append(value.InterpolatedSqlBuilder.Build());
+            Append(value.InterpolatedSqlBuilder.AsSql());
         }
 #else
         /// <summary>
@@ -354,13 +352,9 @@ namespace InterpolatedSql
                 CheckAutoSpacing(value[startIndex]);
 
             if (Options.AutoEscapeCurlyBraces == false || value.IndexOfAny(new char[] { '{', '}' }, startIndex, count) == -1)
-            {
                 _format.Append(value, startIndex, count);
-            }
             else
-            {
                 for (int i = 0; i < count; i++)
-                {
                     switch (value[startIndex + i])
                     {
                         case '{':
@@ -372,8 +366,6 @@ namespace InterpolatedSql
                         default:
                             _format.Append(value[startIndex + i]); break;
                     }
-                }
-            }
 
             if (Options.AutoFixSingleQuotes)
             {
@@ -454,38 +446,34 @@ namespace InterpolatedSql
             // Copied from https://stackoverflow.com/questions/1359948/why-doesnt-stringbuilder-have-indexof-method  - it's a shame that StringBuilder has Replace but does not have IndexOf
             int index;
             int length = value.Length;
-            int maxSearchLength = (_format.Length - length) + 1;
+            int maxSearchLength = _format.Length - length + 1;
 
             if (ignoreCase)
             {
                 for (int i = startIndex; i < maxSearchLength; ++i)
-                {
                     if (char.ToLower(_format[i]) == char.ToLower(value[0]))
                     {
                         index = 1;
-                        while ((index < length) && (char.ToLower(_format[i + index]) == char.ToLower(value[index])))
+                        while (index < length && char.ToLower(_format[i + index]) == char.ToLower(value[index]))
                             ++index;
 
                         if (index == length)
                             return i;
                     }
-                }
 
                 return -1;
             }
 
             for (int i = startIndex; i < maxSearchLength; ++i)
-            {
                 if (_format[i] == value[0])
                 {
                     index = 1;
-                    while ((index < length) && (_format[i + index] == value[index]))
+                    while (index < length && _format[i + index] == value[index])
                         ++index;
 
                     if (index == length)
                         return i;
                 }
-            }
 
             return -1;
         }
@@ -501,7 +489,7 @@ namespace InterpolatedSql
         /// </summary>
         public void Insert(int index, IInterpolatedSql value)
         {
-            value = (value as IBuildable)?.Build() ?? value;
+            value = (value as ISqlEnricher)?.GetEnrichedSql() ?? value;
             if (!value.SqlParameters.Any())
             {
                 _format.Insert(index, value.Format);
@@ -513,7 +501,7 @@ namespace InterpolatedSql
             string newFormat = value.Format;
             if (Options.ReuseIdenticalParameters)
             {
-                Dictionary<int, int> oldToNewPos = new Dictionary<int, int>();
+                var oldToNewPos = new Dictionary<int, int>();
                 for (int i = 0; i < value.SqlParameters.Count; i++)
                 {
                     var parm = value.SqlParameters[i];
@@ -529,7 +517,7 @@ namespace InterpolatedSql
                 _sqlParameters.AddRange(value.SqlParameters);
                 if (shift > 0) // do new arguments have to be shifted
                 {
-                    Func<int, int> getNewPos = (oldPos) => oldPos + ((oldPos >= 0 && oldPos < value.SqlParameters.Count) ? shift : 0);
+                    Func<int, int> getNewPos = (oldPos) => oldPos + (oldPos >= 0 && oldPos < value.SqlParameters.Count ? shift : 0);
                     newFormat = Options.Parser.ShiftPlaceholderPositions(newFormat, getNewPos);
                 }
             }
@@ -545,9 +533,9 @@ namespace InterpolatedSql
         public void Insert(int index, FormattableString value) // TODO: #if NET6_0_OR_GREATER / ref InterpolatedSqlHandler
         {
             //TODO: we could probably use Options.Parser.ParseInsert(value, this, index) - but it's not using ReuseIdenticalParameters, so parsing into InterpolatedSqlBuilder
-            var temp = InterpolatedSqlBuilderFactory.Default.Create();
+            var temp = SqlBuilderFactory.Default.Create();
             Options.Parser.ParseAppend(temp, value);
-            Insert(index, temp.Build());
+            Insert(index, temp.AsSql());
         }
 
         /// <summary>
@@ -668,15 +656,13 @@ namespace InterpolatedSql
         /// </summary>
         public virtual void AddObjectProperties(object obj)
         {
-            Dictionary<string, PropertyInfo> props =
+            var props =
                 obj.GetType()
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .ToDictionary(prop => prop.Name, prop => prop);
 
             foreach (var prop in props)
-            {
                 AddParameter(new DbTypeParameterInfo(prop.Key, prop.Value.GetValue(obj, new object[] { })));
-            }
         }
         #endregion
 
@@ -697,7 +683,7 @@ namespace InterpolatedSql
             {
                 if (_format == null || _sqlParameters == null || _explicitParameters == null)
                     return ""; // not initialized
-                var built = (this as IBuildable).Build();
+                var built = (this as ISqlEnricher)?.GetEnrichedSql() ?? this.AsSql();
                 if (built == null)
                     return "";
                 var parms = built.SqlParameters;
@@ -712,21 +698,48 @@ namespace InterpolatedSql
                     + (parms[pos].Argument?.ToString() ?? "")
                     + (parms[pos].Argument is string ? "'" : "")
                     );
-                return "\"" + built.Sql + "\"" + (" (" + string.Join(", ", formattedParms) + ")");
+                return "\"" + built.Sql + "\"" + " (" + string.Join(", ", formattedParms) + ")";
             }
         }
+
+        //protected IInterpolatedSql Unwrap()
+        //{
+        //    // tirar loop , retornar null se for igual, e cosaslwesce e property privada
+        //    object current = this;
+        //    IBuildable? buildable;
+        //    if ((buildable = current as IBuildable) == null)
+        //        return null;
+        //    var built = buildable.Build();
+        //    if (ReferenceEquals(built, current)) // some builders will just return itself during Built(), with no transformation
+        //        return null;
+        //    return built;
+        //}
 
         /// <summary>
         /// Casts the current builder into an IInterpolatedSql using a wrapper.
         /// The underlying properties (Sql, SqlParameters, etc) are the same - they are not copied.
+        /// If the current builder implements <see cref="ISqlEnricher"/>  this will return that enriched result.
         /// </summary>
-        protected IInterpolatedSql AsSql()
+        public IInterpolatedSql AsSql()
         {
+            if (this is ISqlEnricher enricher)
+                return enricher.GetEnrichedSql();
             return new SqlBuilderWrapper(this);
         }
 
-        public IInterpolatedSql ToImmutableSql()
+        /// <summary>
+        /// Return an immutable <see cref="IInterpolatedSql"/>.
+        /// Similar to <see cref="AsSql"/> but creates a copy of the values instead of a wrapper
+        /// </summary>
+        public IInterpolatedSql ToSql()
         {
+            if (this is ISqlEnricher enricher)
+            {
+                var sql = enricher.GetEnrichedSql();
+                if (ReferenceEquals(sql, this)) // force a copy
+                    return new ImmutableInterpolatedSql(sql.Sql, sql.Format, sql.SqlParameters, sql.ExplicitParameters);
+                return sql;
+            }
             string format = _format.ToString();
             return new ImmutableInterpolatedSql(BuildSql(format, _sqlParameters), format, _sqlParameters, _explicitParameters);
         }
@@ -771,16 +784,10 @@ namespace InterpolatedSql
         /// <returns></returns>
         public FormattableString AsFormattableString()
         {
-            var sql = this.AsSql();
+            var sql = AsSql();
             return FormattableStringFactory.Create(sql.Format, sql.SqlParameters.ToArray());
         }
-
-        IInterpolatedSql IBuildable.Build()
-        {
-            return this.AsSql();
-        }
-
         #endregion
-
     }
+
 }

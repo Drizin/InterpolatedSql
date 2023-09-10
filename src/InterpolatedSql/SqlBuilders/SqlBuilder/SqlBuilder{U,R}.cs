@@ -1,56 +1,56 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 
-namespace InterpolatedSql
+namespace InterpolatedSql.SqlBuilders
 {
     /// <summary>
-    /// SqlBuilder is a simple specialization of InterpolatedSqlBuilder (a dynamic SQL builder where SqlParameters are defined using string interpolation and yet it's but injection safe),
-    /// the major addition is that it exposes some underlying protected properties (Sql/SqlParameters/ExplicitParameters) making it an implementation of IInterpolatedSql.
-    /// (In other words you don't have to call Build() - you just pass the builder and it should be accepted by any method that expects an IInterpolatedSql.
+    /// Dynamic SQL builder where SqlParameters are defined using string interpolation (but it's injection safe). This is the most important piece of the library.
+    ///
+    /// Parameters should just be embedded using interpolated objects, and they will be preserved (will not be mixed with the literals)
+    /// and will be parametrized when you need to run the command.
+    /// So it wraps the underlying SQL statement and the associated parameters, 
+    /// allowing to easily add new clauses to underlying statement and also add new parameters.
     /// </summary>
-    public abstract class SqlBuilder<U,R> : InterpolatedSqlBuilder<U, R>, IInterpolatedSql
-        where U : IInterpolatedSqlBuilder<U, R>
+    /// <typeparam name="U">Recursive Generics: U Should be the same class that implements InterpolatedSqlBuilder{U}, or any other interface implemented by this class</typeparam>
+    /// <typeparam name="R">R Should be the type that this builder builds (type returned by Build()) - should implement IInterpolatedSql</typeparam>
+    /// <remarks>Fluent Builder with Recursive Generics - allows Fluent API to always return the same type U</remarks>
+    public abstract class SqlBuilder<U, R> : InterpolatedSqlBuilderBase<U, R>, ISqlBuilder<U, R>, IBuildable<R>
+        where U :  ISqlBuilder<U, R>
         where R : class, IInterpolatedSql
     {
         #region ctor
         /// <inheritdoc />
-        protected SqlBuilder(InterpolatedSqlBuilderOptions? options, StringBuilder? format, List<InterpolatedSqlParameter>? arguments) : base(options, format, arguments) { }
+        protected SqlBuilder(InterpolatedSqlBuilderOptions? options, StringBuilder? format, List<InterpolatedSqlParameter>? arguments) : base(options ?? InterpolatedSqlBuilderOptions.DefaultOptions, format, arguments)
+        {
+        }
 
         /// <inheritdoc />
-        public SqlBuilder(InterpolatedSqlBuilderOptions? options = null) : base(options) { }
+        public SqlBuilder(InterpolatedSqlBuilderOptions? options = null) : this(options: options, format: null, arguments: null)
+        {
+        }
 
 
         /// <inheritdoc />
-        public SqlBuilder(FormattableString value, InterpolatedSqlBuilderOptions? options = null) : base(value, options) { }
+        public SqlBuilder(FormattableString value, InterpolatedSqlBuilderOptions? options = null) : this(options: options)
+        {
+            // This constructor gets a FormattableString to be immediately parsed, and therefore it can be important to provide Options (and Parser) immediately together
+            if (value != null)
+            {
+                Options.Parser.ParseAppend(this, value);
+                ResetAutoSpacing(); // rearm after appending initial text
+            }
+        }
 
 #if NET6_0_OR_GREATER
         /// <inheritdoc />
-        public SqlBuilder(int literalLength, int formattedCount, InterpolatedSqlBuilderOptions? options = null) : base(literalLength, formattedCount, options)
+        public SqlBuilder(int literalLength, int formattedCount, InterpolatedSqlBuilderOptions? options = null) : base(literalLength, formattedCount, options ?? InterpolatedSqlBuilderOptions.DefaultOptions)
         {
         }
 #endif
-
-
         #endregion
 
-        #region IInterpolatedSql
-        string IInterpolatedSql.Sql => base.Sql;
 
-        IReadOnlyList<InterpolatedSqlParameter> IInterpolatedSql.SqlParameters => base.SqlParameters;
-
-        IReadOnlyList<SqlParameterInfo> IInterpolatedSql.ExplicitParameters => base.ExplicitParameters;
-
-
-        // Also exposed as public properties
-        /// <inheritdoc />
-        public new string Sql => ((IInterpolatedSql)this).Sql;
-
-        /// <inheritdoc />
-        public new IReadOnlyList<InterpolatedSqlParameter> SqlParameters => ((IInterpolatedSql)this).SqlParameters;
-
-        /// <inheritdoc />
-        public new IReadOnlyList<SqlParameterInfo> ExplicitParameters => ((IInterpolatedSql)this).ExplicitParameters;
-        #endregion
     }
 }

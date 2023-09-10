@@ -4,9 +4,15 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+//using TestHelper = InterpolatedSql.Dapper.Tests.TestHelper;
 
 namespace InterpolatedSql.Dapper.Tests
+//namespace InterpolatedSql.DapperX.Tests
 {
+    using InterpolatedSql;
+    using InterpolatedSql.Dapper.SqlBuilders.Legacy;
+    using InterpolatedSql.SqlBuilders;
+
     [TestFixture(true)]
     [TestFixture(false)]
 
@@ -17,9 +23,7 @@ namespace InterpolatedSql.Dapper.Tests
         public SqlBuilderTests() { } // nunit requires parameterless constructor
         public SqlBuilderTests(bool reuseIdenticalParameters)
         {
-            InterpolatedSql.Dapper.SqlBuilder.DefaultOptions.ReuseIdenticalParameters = 
-            InterpolatedSql.Dapper.QueryBuilder.DefaultOptions.ReuseIdenticalParameters =
-            reuseIdenticalParameters;
+            InterpolatedSqlBuilderOptions.DefaultOptions.ReuseIdenticalParameters = reuseIdenticalParameters;
         }
 
         #region Setup
@@ -49,7 +53,7 @@ namespace InterpolatedSql.Dapper.Tests
             int subCategoryId = 12;
 
             var query = cn
-                .SqlBuilder($$"""
+                .LegacyCommandBuilder($$"""
                 SELECT * FROM [Production].[Product]
                 WHERE
                 [Name] LIKE {{productName}}
@@ -75,7 +79,7 @@ ORDER BY [ProductId]".TrimStart(), query.Sql);
             int subCategoryId = 12;
 
             var query = cn
-                .SqlBuilder($$"""
+                .LegacyCommandBuilder($$"""
                 SELECT * FROM [Production].[Product]
                 WHERE
                 [{{nameof(Product.Name):raw}}] LIKE {{productName}}
@@ -100,7 +104,7 @@ ORDER BY [ProductId]".TrimStart(), query.Sql);
             int subCategoryId = 12;
 
             var query = cn
-                .SqlBuilder($@"SELECT * FROM [Production].[Product]")
+                .LegacyCommandBuilder($@"SELECT * FROM [Production].[Product]")
                 .AppendLine($"WHERE")
                 .AppendLine($"[Name] LIKE {productName}")
                 .AppendLine($"AND [ProductSubcategoryID] = {subCategoryId}")
@@ -122,11 +126,11 @@ ORDER BY [ProductId]", query.Sql);
             int subCategoryId = 12;
 #if NET6_0_OR_GREATER
             var query2 = cn
-                .SqlBuilder($@"SELECT * FROM [Production].[Product]")
+                .LegacyCommandBuilder($@"SELECT * FROM [Production].[Product]")
                 .Append($"WHERE");
 #endif
             var query = cn
-                .SqlBuilder($@"SELECT * FROM [Production].[Product]")
+                .LegacyCommandBuilder($@"SELECT * FROM [Production].[Product]")
                 .Append($"WHERE")
                 .Append($"[Name] LIKE {productName}")
                 .Append($"AND [ProductSubcategoryID] = {subCategoryId}")
@@ -140,7 +144,7 @@ ORDER BY [ProductId]", query.Sql);
         [Test]
         public void TestStoredProcedure()
         {
-            var q = cn.SqlBuilder($"[HumanResources].[uspUpdateEmployeePersonalInfo]")
+            var q = cn.LegacyCommandBuilder($"[HumanResources].[uspUpdateEmployeePersonalInfo]")
                 .AddParameter("BusinessEntityID", businessEntityID)
                 .AddParameter("NationalIDNumber", nationalIDNumber)
                 .AddParameter("BirthDate", birthDate)
@@ -152,7 +156,7 @@ ORDER BY [ProductId]", query.Sql);
         [Test]
         public void TestStoredProcedureExec()
         {
-            var q = cn.SqlBuilder($@"
+            var q = cn.LegacyCommandBuilder($@"
                 DECLARE @ret INT;
                 EXEC @RET = [HumanResources].[uspUpdateEmployeePersonalInfo] 
                    @BusinessEntityID={businessEntityID}
@@ -173,7 +177,7 @@ ORDER BY [ProductId]", query.Sql);
         {
             MyPoco poco = new MyPoco();
 
-            var cmd = cn.SqlBuilder($"[dbo].[sp_TestOutput]")
+            var cmd = cn.LegacyCommandBuilder($"[dbo].[sp_TestOutput]")
                 .AddParameter("Input1", dbType: DbType.Int32);
             //.AddParameter("Output1",  dbType: DbType.Int32, direction: ParameterDirection.Output);
             //var getter = ParameterInfos.GetSetter((MyPoco p) => p.MyValue);
@@ -192,7 +196,7 @@ ORDER BY [ProductId]", query.Sql);
         public void TestCRUD()
         {
             string id = "123";
-            int affected = cn.SqlBuilder($@"UPDATE [HumanResources].[Employee] SET")
+            int affected = cn.LegacyCommandBuilder($@"UPDATE [HumanResources].[Employee] SET")
                 .Append($"NationalIDNumber={id}")
                 .Append($"WHERE BusinessEntityID={businessEntityID}")
                 .Execute();
@@ -206,8 +210,8 @@ ORDER BY [ProductId]", query.Sql);
         {
             string search = "%mountain%";
             string expected = "SELECT * FROM [Production].[Product] WHERE [Name] LIKE @p0";
-            var cmd = cn.SqlBuilder($@"SELECT * FROM [Production].[Product] WHERE [Name] LIKE {search}");
-            var cmd2 = cn.SqlBuilder($@"SELECT * FROM [Production].[Product] WHERE [Name] LIKE '{search}'");
+            var cmd = cn.LegacyCommandBuilder($@"SELECT * FROM [Production].[Product] WHERE [Name] LIKE {search}");
+            var cmd2 = cn.LegacyCommandBuilder($@"SELECT * FROM [Production].[Product] WHERE [Name] LIKE '{search}'");
             
             Assert.AreEqual(expected, cmd.Sql);
             Assert.AreEqual(expected, cmd2.Sql);
@@ -227,8 +231,8 @@ ORDER BY [ProductId]", query.Sql);
         {
             string productNumber = "AR-5381";
             string expected = "SELECT * FROM [Production].[Product] WHERE [ProductNumber]=@p0";
-            var cmd = cn.SqlBuilder($@"SELECT * FROM [Production].[Product] WHERE [ProductNumber]='{productNumber}'");
-            var cmd2 = cn.SqlBuilder($@"SELECT * FROM [Production].[Product] WHERE [ProductNumber]={productNumber}");
+            var cmd = cn.LegacyCommandBuilder($@"SELECT * FROM [Production].[Product] WHERE [ProductNumber]='{productNumber}'");
+            var cmd2 = cn.LegacyCommandBuilder($@"SELECT * FROM [Production].[Product] WHERE [ProductNumber]={productNumber}");
 
             Assert.AreEqual(expected, cmd.Sql);
             Assert.AreEqual(expected, cmd2.Sql);
@@ -248,8 +252,8 @@ ORDER BY [ProductId]", query.Sql);
         {
             string productNumber = "AR-5381";
             string expected = "SELECT * FROM [Production].[Product] WHERE @p0<=[ProductNumber]";
-            var cmd = cn.SqlBuilder($@"SELECT * FROM [Production].[Product] WHERE '{productNumber}'<=[ProductNumber]");
-            var cmd2 = cn.SqlBuilder($@"SELECT * FROM [Production].[Product] WHERE {productNumber}<=[ProductNumber]");
+            var cmd = cn.LegacyCommandBuilder($@"SELECT * FROM [Production].[Product] WHERE '{productNumber}'<=[ProductNumber]");
+            var cmd2 = cn.LegacyCommandBuilder($@"SELECT * FROM [Production].[Product] WHERE {productNumber}<=[ProductNumber]");
 
             Assert.AreEqual(expected, cmd.Sql);
             Assert.AreEqual(expected, cmd2.Sql);
@@ -271,10 +275,10 @@ ORDER BY [ProductId]", query.Sql);
             string search = "%mountain%";
 
             string expected = "SELECT 'Hello' FROM [Production].[Product] WHERE [Name] LIKE @p0";
-            var cmd = cn.SqlBuilder($@"SELECT '{literal:raw}' FROM [Production].[Product] WHERE [Name] LIKE {search}"); // quotes will be preserved
+            var cmd = cn.LegacyCommandBuilder($@"SELECT '{literal:raw}' FROM [Production].[Product] WHERE [Name] LIKE {search}"); // quotes will be preserved
 
             string expected2 = "SELECT @p0 FROM [Production].[Product] WHERE [Name] LIKE @p1";
-            var cmd2 = cn.SqlBuilder($@"SELECT '{literal}' FROM [Production].[Product] WHERE [Name] LIKE {search}"); // quotes will be striped
+            var cmd2 = cn.LegacyCommandBuilder($@"SELECT '{literal}' FROM [Production].[Product] WHERE [Name] LIKE {search}"); // quotes will be striped
 
             Assert.AreEqual(expected, cmd.Sql);
             Assert.AreEqual(expected2, cmd2.Sql);
@@ -291,7 +295,7 @@ ORDER BY [ProductId]", query.Sql);
         public void TestAutospacing()
         {
             string search = "%mountain%";
-            var cmd = cn.SqlBuilder($@"SELECT * FROM [Production].[Product]");
+            var cmd = cn.LegacyCommandBuilder($@"SELECT * FROM [Production].[Product]");
             cmd.Append($"WHERE [Name] LIKE {search}");
             cmd.Append($"AND 1=1");
             Assert.AreEqual("SELECT * FROM [Production].[Product] WHERE [Name] LIKE @p0 AND 1=1", cmd.Sql);
@@ -301,7 +305,7 @@ ORDER BY [ProductId]", query.Sql);
         public void TestOperatorOverload()
         {
             string search = "%mountain%";
-            var cmd = cn.SqlBuilder()
+            var cmd = cn.LegacyCommandBuilder()
                 + $@"SELECT * FROM [Production].[Product]"
                 + $"WHERE [Name] LIKE {search}";
             cmd += $"AND 1=1";
@@ -312,7 +316,7 @@ ORDER BY [ProductId]", query.Sql);
         public void TestAutospacing2()
         {
             string search = "%mountain%";
-            var cmd = cn.SqlBuilder($$"""
+            var cmd = cn.LegacyCommandBuilder($$"""
                             SELECT * FROM [Production].[Product]
                             WHERE [Name] LIKE {{search}}
                             AND 1=2
@@ -328,7 +332,7 @@ ORDER BY [ProductId]", query.Sql);
         {
             string productNumber = "EC-M092";
             int productId = 328;
-            var cmd = cn.SqlBuilder($$"""
+            var cmd = cn.LegacyCommandBuilder($$"""
                 UPDATE [Production].[Product]
                 SET [ProductNumber]={{productNumber}}
                 WHERE [ProductId]={{productId}}
@@ -348,7 +352,7 @@ ORDER BY [ProductId]", query.Sql);
             string productNumber = "EC-M092";
             int productId = 328;
 
-            var cmd = cn.SqlBuilder($@"UPDATE [Production].[Product]")
+            var cmd = cn.LegacyCommandBuilder($@"UPDATE [Production].[Product]")
                 .Append($"SET [ProductNumber]={productNumber}")
                 .Append($"WHERE [ProductId]={productId}");
 
@@ -365,7 +369,7 @@ ORDER BY [ProductId]", query.Sql);
             int subCategoryId = 12;
 
             var query = cn
-                .SqlBuilder($@"SELECT * FROM [Production].[Product] WHERE [Name] LIKE {productName}");
+                .LegacyCommandBuilder($@"SELECT * FROM [Production].[Product] WHERE [Name] LIKE {productName}");
             query.AppendLine($"AND [ProductSubcategoryID] = {subCategoryId} ORDER BY {2}");
             Assert.AreEqual(@"SELECT * FROM [Production].[Product] WHERE [Name] LIKE @p0
 AND [ProductSubcategoryID] = @p1 ORDER BY @p2", query.Sql);
@@ -380,7 +384,7 @@ AND [ProductSubcategoryID] = @p1 ORDER BY @p2", query.Sql);
             int subCategoryId = 12;
 
             var query = cn
-                .SqlBuilder($@"SELECT * FROM [Production].[Product] WHERE [Name] LIKE {productName}");
+                .LegacyCommandBuilder($@"SELECT * FROM [Production].[Product] WHERE [Name] LIKE {productName}");
             query.AppendLine($"AND [ProductSubcategoryID]={subCategoryId} ORDER BY {2}");
             Assert.AreEqual(@"SELECT * FROM [Production].[Product] WHERE [Name] LIKE @p0
 AND [ProductSubcategoryID]=@p1 ORDER BY @p2", query.Sql);
@@ -396,7 +400,7 @@ AND [ProductSubcategoryID]=@p1 ORDER BY @p2", query.Sql);
             int subCategoryId = 12;
             int? categoryId = null;
 
-            var query = cn.SqlBuilder($@"SELECT * FROM [table1] WHERE ([Name]={username} or [Author]={username}");
+            var query = cn.LegacyCommandBuilder($@"SELECT * FROM [table1] WHERE ([Name]={username} or [Author]={username}");
             query.Append($"or [Creator]={username})");
             query.Append($"AND ([ProductSubcategoryID]={subCategoryId}");
             query.Append($"OR [ProductSubcategoryID]={categoryId}");
@@ -435,7 +439,7 @@ AND [ProductSubcategoryID]=@p1 ORDER BY @p2", query.Sql);
         [Test]
         public void TestRepeatedParameters2()
         {
-            if (!InterpolatedSql.Dapper.SqlBuilder.DefaultOptions.ReuseIdenticalParameters)
+            if (!InterpolatedSqlBuilderOptions.DefaultOptions.ReuseIdenticalParameters)
                 return;
 
             int? fileId = null;
@@ -451,7 +455,7 @@ AND [ProductSubcategoryID]=@p1 ORDER BY @p2", query.Sql);
             var contentType = "application/pdf";
             var folder = "btr.aney.terry";
 
-            var query = cn.SqlBuilder($@"DECLARE @fKey int; SET @fKey = {fileId};
+            var query = cn.LegacyCommandBuilder($@"DECLARE @fKey int; SET @fKey = {fileId};
 DECLARE @backupFileName VARCHAR(1); SET @backupFileName = {backupFileName};
 IF @backupFileName IS NOT NULL BEGIN
     UPDATE [File] SET Name = @backupFileName WHERE UID = @fKey;
@@ -519,7 +523,7 @@ SELECT @fKey", query.Sql);
         public void TestRepeatedParameters3() // without leading spaces
         {
             var cn = new SqlConnection();
-            var qb = cn.SqlBuilder($"{"A"}");
+            var qb = cn.LegacyCommandBuilder($"{"A"}");
             qb.Append($"{"B"}");
             Assert.AreEqual("@p0 @p1", qb.Sql);
         }
@@ -528,7 +532,7 @@ SELECT @fKey", query.Sql);
         public void TestRepeatedParameters4()
         {
             var cn = new SqlConnection();
-            var qb = cn.SqlBuilder();
+            var qb = cn.LegacyCommandBuilder();
             qb.Append($"{"A"},{"B"},{"C"},{"D"},{"E"},{"F"},{"G"},{"H"},{"I"},{"J"},{"K"},"); // @p0-@p10
             qb.Append($"{1},{2},{3},{4},{4},{5},{6},{7},{8},{9},{10},"); // @p10-@p20, with repeated @p14
 
@@ -545,7 +549,7 @@ SELECT @fKey", query.Sql);
         public void TestRepeatedParameters5()
         {
             var cn = new SqlConnection();
-            var qb = cn.SqlBuilder();
+            var qb = cn.LegacyCommandBuilder();
             qb.Append($"{"A"}"); // @p0
             qb.Append($"{"B"}"); // @p1
 
@@ -588,7 +592,7 @@ SELECT @fKey", query.Sql);
             string action = "DELETED_ORDER";
             string description = $"User {currentUserId} deleted order {orderId}";
 
-            var cmd = cn.SqlBuilder();
+            var cmd = cn.LegacyCommandBuilder();
             if (softDelete)
                 cmd.Append($"UPDATE Orders SET IsDeleted=1 WHERE OrderId = {orderId}; ");
             else
@@ -701,7 +705,7 @@ select 'ok'
             var s = query.Sql;
             var p = query.DapperParameters;
 
-            if (InterpolatedSql.Dapper.QueryBuilder.DefaultOptions.ReuseIdenticalParameters)
+            if (InterpolatedSqlBuilderOptions.DefaultOptions.ReuseIdenticalParameters)
             {
                 Assert.AreEqual(@"
 declare @v1 nvarchar(10)=@p0
@@ -773,7 +777,7 @@ select 'ok'
         [Test]
         public void SimpleQueryStoredProcedure()
         {
-            var q = cn.SqlBuilder($"[dbo].[uspGetEmployeeManagers]")
+            var q = cn.LegacyCommandBuilder($"[dbo].[uspGetEmployeeManagers]")
                 .AddParameter("BusinessEntityID", 280);
 
             var r = q.Query<dynamic>(commandType: CommandType.StoredProcedure);
@@ -785,7 +789,7 @@ select 'ok'
         public void QueryMultipleStoredProcedure()
         {
             //AdventureWorks does not contain a proc which returns multiple result sets, so create our own
-            int a = cn.SqlBuilder($@"
+            int a = cn.LegacyCommandBuilder($@"
 CREATE OR ALTER PROCEDURE [dbo].[uspGetEmployeeManagers_Twice]
     @BusinessEntityID [int]
 AS
@@ -794,7 +798,7 @@ BEGIN
     EXEC [dbo].[uspGetEmployeeManagers] @BusinessEntityID = @BusinessEntityID
 
 END").Execute();
-            var q = cn.SqlBuilder($"[dbo].[uspGetEmployeeManagers_Twice]")
+            var q = cn.LegacyCommandBuilder($"[dbo].[uspGetEmployeeManagers_Twice]")
                 .AddParameter("BusinessEntityID", 280);
 
             using (var gridReader = q.QueryMultiple(commandType: CommandType.StoredProcedure))

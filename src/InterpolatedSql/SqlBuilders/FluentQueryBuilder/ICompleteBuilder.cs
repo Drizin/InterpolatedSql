@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace InterpolatedSql.FluentQueryBuilder
+﻿namespace InterpolatedSql.SqlBuilders.FluentQueryBuilder
 {
     /// <summary>
     /// Query Builder with one or more clause in where, which can still add more clauses to where
@@ -9,7 +7,7 @@ namespace InterpolatedSql.FluentQueryBuilder
         //: ISqlCommand<U>
 
         where U : IFluentQueryBuilder<U, RB, R>
-        where RB : IInterpolatedSqlBuilder<RB, R>
+        where RB : ISqlBuilder<RB, R>
         where R: class, IInterpolatedSql
     {
         /// <summary>

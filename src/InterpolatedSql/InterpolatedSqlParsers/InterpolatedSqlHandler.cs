@@ -1,4 +1,5 @@
 ﻿#if NET6_0_OR_GREATER
+using InterpolatedSql.SqlBuilders;
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -15,9 +16,9 @@ namespace InterpolatedSql
         /// <summary>
         /// Underlying Interpolated String
         /// </summary>
-        public IInterpolatedSqlBuilder InterpolatedSqlBuilder => _interpolatedSqlBuilder;
+        public IInterpolatedSqlBuilderBase InterpolatedSqlBuilder => _interpolatedSqlBuilder;
 
-        private IInterpolatedSqlBuilder _interpolatedSqlBuilder;
+        private readonly IInterpolatedSqlBuilderBase _interpolatedSqlBuilder;
 
         /// <summary>
         /// Position of the underlying InterpolatedSqlBuilder when this InterpolatedSqlHandler started writing into it.
@@ -27,26 +28,26 @@ namespace InterpolatedSql
         /// <inheritdoc />
         public InterpolatedSqlHandler(int literalLength, int formattedCount) // InterpolatedSqlFactory.Create() doesn't provide "this" (InterpolatedSqlHandler will create a new StringBuilder)
         {
-            _interpolatedSqlBuilder = InterpolatedSqlBuilderFactory.Default.Create(literalLength, formattedCount);
+            _interpolatedSqlBuilder = SqlBuilderFactory.Default.Create(literalLength, formattedCount);
             _sqlBuilderStartingPos = 0;
         }
 
         /// <inheritdoc />
         public InterpolatedSqlHandler(int literalLength, int formattedCount, InterpolatedSqlBuilderOptions options)
         {
-            _interpolatedSqlBuilder = InterpolatedSqlBuilderFactory.Default.Create(literalLength, formattedCount, options);
+            _interpolatedSqlBuilder = SqlBuilderFactory.Default.Create(literalLength, formattedCount, options);
             _sqlBuilderStartingPos = 0;
         }
 
         /// <inheritdoc />
-        public InterpolatedSqlHandler(int literalLength, int formattedCount, IInterpolatedSqlBuilder target) // used by InterpolatedSqlBuilder<U, R>.Append(...)
+        public InterpolatedSqlHandler(int literalLength, int formattedCount, IInterpolatedSqlBuilderBase target) // used by InterpolatedSqlBuilder<U, R>.Append(...)
         {
             _interpolatedSqlBuilder = target;
             _sqlBuilderStartingPos = target.Format.Length;
         }
 
         /// <inheritdoc />
-        public InterpolatedSqlHandler(int literalLength, int formattedCount, IInterpolatedSqlBuilder target, bool condition, out bool isEnabled) // used by InterpolatedSqlBuilder<U, R>.AppendIf(bool condition, ...)
+        public InterpolatedSqlHandler(int literalLength, int formattedCount, IInterpolatedSqlBuilderBase target, bool condition, out bool isEnabled) // used by InterpolatedSqlBuilder<U, R>.AppendIf(bool condition, ...)
         {
             isEnabled = condition;
             if (!isEnabled)
@@ -108,9 +109,9 @@ namespace InterpolatedSql
                 return;
             }
 
-            if (value is InterpolatedSql.IBuildable iTransf)
+            if (value is ISqlEnricher enricher)
             {
-                _interpolatedSqlBuilder.Append(iTransf.Build()); // this will automatically shift the arguments
+                _interpolatedSqlBuilder.Append(enricher.GetEnrichedSql()); // this will automatically shift the arguments
                 _interpolatedSqlBuilder.AutoSpacing = false;
                 return;
             }
@@ -119,6 +120,13 @@ namespace InterpolatedSql
             if (value is FormattableString fsArg)
             {
                 _interpolatedSqlBuilder.AppendFormattableString(fsArg); // this will automatically shift the arguments
+                _interpolatedSqlBuilder.AutoSpacing = false;
+                return;
+            }
+
+            if (value is InterpolatedSqlBuilderBase builder)
+            {
+                _interpolatedSqlBuilder.Append(builder.AsSql()); // this will automatically shift the arguments
                 _interpolatedSqlBuilder.AutoSpacing = false;
                 return;
             }

@@ -4,7 +4,7 @@ namespace InterpolatedSql
 {
     /// <summary>
     /// Immutable implementation of <see cref="IInterpolatedSql"/>.
-    /// If you want a mutable class (to dynamically append statements) you probably need <see cref="SqlBuilder{T}"/> or some other subclass
+    /// If you want a mutable class (to dynamically append statements) you probably need <see cref="ISqlBuilder"/> or some builder
     /// </summary>
     public class ImmutableInterpolatedSql : IInterpolatedSql
     {

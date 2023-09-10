@@ -1,4 +1,5 @@
-﻿using System;
+﻿using InterpolatedSql.SqlBuilders;
+using System;
 
 namespace InterpolatedSql
 {

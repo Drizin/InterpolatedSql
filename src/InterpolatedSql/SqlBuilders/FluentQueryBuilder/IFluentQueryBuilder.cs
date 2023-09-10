@@ -1,4 +1,4 @@
-﻿namespace InterpolatedSql.FluentQueryBuilder
+﻿namespace InterpolatedSql.SqlBuilders.FluentQueryBuilder
 {
     /// <summary>
     /// Any class that provides a fluent query builder.
@@ -16,7 +16,7 @@
         ICompleteBuilder<U, RB, R>
 
         where U : IFluentQueryBuilder<U, RB, R>
-        where RB : IInterpolatedSqlBuilder<RB, R>
+        where RB : ISqlBuilder<RB, R>
         where R: class, IInterpolatedSql
     {
     }

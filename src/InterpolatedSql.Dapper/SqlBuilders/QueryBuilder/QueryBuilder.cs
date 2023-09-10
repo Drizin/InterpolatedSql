@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Text;
 
-namespace InterpolatedSql.Dapper
+namespace InterpolatedSql.Dapper.SqlBuilders
 {
     /// <inheritdoc/>
-    public class QueryBuilder : QueryBuilder<QueryBuilder, SqlBuilder, IDapperSqlCommand>
+    public class QueryBuilder : QueryBuilder<QueryBuilder, ISqlBuilder, IDapperSqlCommand>, IQueryBuilder
     {
         #region ctors
         /// <inheritdoc/>

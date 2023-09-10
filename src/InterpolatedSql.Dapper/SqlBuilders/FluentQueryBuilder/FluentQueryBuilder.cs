@@ -1,19 +1,19 @@
-﻿using System;
+﻿using InterpolatedSql.SqlBuilders;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace InterpolatedSql.Dapper.FluentQueryBuilder
+namespace InterpolatedSql.Dapper.SqlBuilders.FluentQueryBuilder
 {
     /// <summary>
-    /// Exactly like <see cref="global::InterpolatedSql.FluentQueryBuilder.FluentQueryBuilder{U, RB, R}"/> 
+    /// Exactly like <see cref="global::InterpolatedSql.SqlBuilders.FluentQueryBuilder.FluentQueryBuilder{U, RB, R}"/> 
     /// (an injection-safe dynamic SQL builder with a Fluent API that helps to build the query step by step)
     /// but also wraps an underlying IDbConnection, and there are extensions to invoke Dapper methods
     /// </summary>
-    public class FluentQueryBuilder : global::InterpolatedSql.FluentQueryBuilder.FluentQueryBuilder<IFluentQueryBuilder, SqlBuilder, IDapperSqlCommand>,
+    public class FluentQueryBuilder : global::InterpolatedSql.SqlBuilders.FluentQueryBuilder.FluentQueryBuilder<IFluentQueryBuilder, SqlBuilder, IDapperSqlCommand>,
         IFluentQueryBuilder,
-        IBuildable<IDapperSqlCommand>,
-        IDapperSqlCommand //TODO: deprecate this - users should call *Build()*.DapperExtensions<etc>
+        IBuildable<IDapperSqlCommand>
     {
         #region ctors
         /// <inheritdoc/>
@@ -35,24 +35,6 @@ namespace InterpolatedSql.Dapper.FluentQueryBuilder
             get => base.DbConnection!;
             set => base.DbConnection = value;
         }
-        public override IDapperSqlCommand Build()
-        {
-            var cmd = base.Build();
-            if (cmd != null)
-                cmd.DbConnection = this.DbConnection;
-            return cmd;
-        }
-        #endregion
-        #region IDapperSqlCommand - for Legacy compatibility... but not ideal because Build() will be called multiple times!
-        ParametersDictionary IDapperSqlCommand.DapperParameters => ParametersDictionary.LoadFrom(this.Build());
-
-        string IInterpolatedSql.Sql => this.Build().Sql;
-
-        string IInterpolatedSql.Format => this.Build().Format;
-
-        IReadOnlyList<InterpolatedSqlParameter> IInterpolatedSql.SqlParameters => this.Build().SqlParameters;
-
-        IReadOnlyList<SqlParameterInfo> IInterpolatedSql.ExplicitParameters => this.Build().ExplicitParameters;
         #endregion
     }
 

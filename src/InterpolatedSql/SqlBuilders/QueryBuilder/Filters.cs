@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace InterpolatedSql
+namespace InterpolatedSql.SqlBuilders
 {
     /// <summary>
     /// Multiple Filter statements which are grouped together. Can be grouped with ANDs or ORs.
@@ -97,7 +97,7 @@ namespace InterpolatedSql
         /// <inheritdoc/>
         public IInterpolatedSql Build()
         {
-            var command = InterpolatedSqlBuilderFactory.Default.Create();
+            var command = SqlBuilderFactory.Default.Create();
             WriteTo(command);
             if (!command.IsEmpty && !command.Format.StartsWith("WHERE "))
                 command.InsertLiteral(0, "WHERE ");
@@ -108,7 +108,7 @@ namespace InterpolatedSql
         {
             get 
             {
-                var sb = InterpolatedSqlBuilderFactory.Default.Create();
+                var sb = SqlBuilderFactory.Default.Create();
                 sb.AppendLiteral("(");
                 sb.AppendLiteral(this.Count().ToString());
                 sb.AppendLiteral(" filters): "); 

@@ -25,11 +25,11 @@ namespace InterpolatedSql.Dapper
         /// and Explicit Parameters (loaded from <see cref="IInterpolatedSql.ExplicitParameters"/>)
         public static ParametersDictionary LoadFrom(IInterpolatedSql sql, Func<InterpolatedSqlParameter, int, string>? calculateAutoParameterName = null) 
         {
-            sql = (sql as IBuildable)?.Build() ?? sql;
+            sql = (sql as ISqlEnricher)?.GetEnrichedSql() ?? sql;
             var parameters = new ParametersDictionary();
             //HashSet<string> parmNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase); //TODO: check for name clashes, rename as required
 
-            calculateAutoParameterName ??=  ((sql as IInterpolatedSqlBuilder)?.Options?.CalculateAutoParameterName ?? SqlBuilder.DefaultOptions.CalculateAutoParameterName);
+            calculateAutoParameterName ??=  ((sql as IInterpolatedSqlBuilderBase)?.Options?.CalculateAutoParameterName ?? InterpolatedSql.SqlBuilders.InterpolatedSqlBuilderOptions.DefaultOptions.CalculateAutoParameterName);
 
             for (int i = 0; i < sql.ExplicitParameters.Count; i++)
             {

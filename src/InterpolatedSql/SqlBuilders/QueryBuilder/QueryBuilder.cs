@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Data;
 
-namespace InterpolatedSql
+namespace InterpolatedSql.SqlBuilders
 {
-    //public interface IQueryBuilderInternalBuilder : IInterpolatedSqlBuilder, IBuildable<IInterpolatedSql>
-    //{
-    //}
     /// <inheritdoc/>
-    public class QueryBuilder : QueryBuilder<QueryBuilder, ISqlBuilder, IInterpolatedSql>
+    public class QueryBuilder : QueryBuilder<QueryBuilder, ISqlBuilder<SqlBuilder, IInterpolatedSql>, IInterpolatedSql>
     {
         /// <inheritdoc/>
         public QueryBuilder() : base(opts => new SqlBuilder(opts), (opts, format, arguments) => new SqlBuilder(opts, format, arguments))
@@ -30,6 +27,14 @@ namespace InterpolatedSql
         {
             DbConnection = connection;
         }
+
+        /// <inheritdoc />
+        public override IInterpolatedSql Build()
+        {
+            return AsSql();
+        }
+
+
     }
 
 }
