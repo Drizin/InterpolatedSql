@@ -16,13 +16,11 @@
 
 # How it works
 
-The library provides a few different **SQL Builders** - these classes contain an underlying **SQL Statement** (text) and also the associated **SQL Parameters**.  
+[**InterpolatedSql**](https://github.com/Drizin/InterpolatedSql) provides a few different **SQL Builders** - those classes contain an underlying **SQL Statement** (text) and also the associated **SQL Parameters**.
+When those builders are created (or when we append to them) they will automatically parse interpolated strings and will extract the **injection-safe SQL statement** and the **interpolated objects** (SQL Parameters), keeping them isolated from each other.
+In other words, you just embed parameters inside the SQL text and the SQL builders will automatically capture the parameters (and keep them isolated from the text), providing an injection-safe SQL statement.
 
-When those builders are created (or when we append to them) they will automatically parse interpolated strings and will extract the **injection-safe SQL statement** and the **interpolated objects** (SQL Parameters), keeping them isolated from each other.  
-
-In other words, you just embed parameters inside the SQL text and the library will automatically capture the parameters (and keep them isolated from the text), providing an injection-safe SQL statement.
-
-**InterpolatedSql.Dapper** extends the SQL Builders of the base library with Dapper-specific features:
+**InterpolatedSql.Dapper** extends those SQL Builders (of the base library) with Dapper-specific features/semantics:
 - They wrap a required `IDbConnection DbConnection`
 - They are created using "Dapper-style": there are extension methods that extend IDbConnection ( exactly like Dapper does) that are used to create the builders
 - After you `Build()` a SQL builder you can invoke facades to all Dapper extensions.
@@ -109,72 +107,70 @@ System.Diagnostics.Debug.WriteLine(query.Sql);
 
 **Dynamic Query:**
 
-SQL Builders wrap two things that should always stay together: the query which you're building, and the parameters that must go together with our query.
-This is a simple concept but it allows us to dynamically add new parameterized SQL clauses/conditions in a single statement:
+This is where things get more interesting. Our SQL Builders wrap two things that should always stay together: the query which you're building, and the parameters that must go together with our query.
+This is a simple concept but it allows us to **dynamically** add new parameterized SQL clauses/conditions in a single statement:
 
 ```cs
+using InterpolatedSql.Dapper;
+//...
+
 string productName = "%Computer%";
 int subCategoryId = 10;
 var cn = new SqlConnection(connectionString);
 
+// In a single statement we append both to the SQL Text and to SqlParameters
 var query = cn.SqlBuilder($"SELECT * FROM Product WHERE 1=1");
-query += $"AND Name LIKE {productName}"; 
-query += $"AND ProductSubcategoryID = {subCategoryId}"; 
-var product = query.Build().Query<Product>();
+if (!string.IsNullOrEmpty(productName))
+    query += $"AND Name LIKE {productName}";
+if (subCategoryId > 0)
+    query += $"AND ProductSubcategoryID = {subCategoryId}";
+var product = query.Build().Query<Product>(); 
 ```
 
-(If it wasn't for a single structure wrapping both the SQL text and the SQL Parameters, you would have to maintain two independent objects - a StringBuilder and a parameters Dictionary).
+If it wasn't for a single structure wrapping both the SQL text and the SQL Parameters, you would have to maintain two independent objects - a StringBuilder and a parameters dictionary.
 
-
-
-# How is this any different than using plain Dapper?
-
-Building a dynamic query using **plain Dapper**:
+**If you were to build the same query dynamically using Dapper it would be a little uglier:**
 
 ```cs
 using Dapper;
 //...
 
+string productName = "%Computer%";
+int subCategoryId = 10;
+var cn = new SqlConnection(connectionString);
+
 // Parameters and SQL text are independent objects
 var dynamicParams = new DynamicParameters();
 string sql = "SELECT * FROM Product WHERE 1=1";
-sql += " AND Name LIKE @productName"; 
-dynamicParams.Add("productName", productName);
-sql += " AND ProductSubcategoryID = @subCategoryId"; 
-dynamicParams.Add("subCategoryId", subCategoryId);
+if (!string.IsNullOrEmpty(productName)) {
+    sql += " AND Name LIKE @productName"; 
+    dynamicParams.Add("productName", productName);
+}
+if (subCategoryId > 0) {
+    sql += " AND ProductSubcategoryID = @subCategoryId"; 
+    dynamicParams.Add("subCategoryId", subCategoryId);
+}
 var products = cn.Query<Product>(sql, dynamicParams);
 ``` 
 
-Building a dynamic query using **InterpolatedSql.Dapper** is much easier:
-
-```cs
-using InterpolatedSql.Dapper;
-// ...
-
-var query = cn.SqlBuilder($"SELECT * FROM Product WHERE 1=1");
-query += $"AND Name LIKE {productName}"; 
-query += $"AND ProductSubcategoryID = {subCategoryId}"; 
-var products = query.Build().Query<Product>();
-```
 
 # Database Support
 
-QueryBuilder is database agnostic (like Dapper) - it should work with all ADO.NET providers (including Microsoft SQL Server, PostgreSQL, MySQL, SQLite, Firebird, SQL CE and Oracle), since it's basically a wrapper around the way parameters are passed to the database provider.  
+Exacly like Dapper this library is database agnostic and should work with all ADO.NET providers (including Microsoft SQL Server, PostgreSQL, MySQL, SQLite, Firebird, SQL CE and Oracle). It was tested with **Microsoft SQL Server** and with **PostgreSQL** (using Npgsql driver).
 
-DapperQueryBuilder doesn't generate SQL statements (except for simple clauses which should work in all databases like `WHERE`/`AND`/`OR` - if you're using `/**where**/` keyword).  
-
-
-It was tested with **Microsoft SQL Server** and with **PostgreSQL** (using Npgsql driver), and works fine in both.  
+Our SQL builders should work with any database, since they are basically a wrapper around the way parameters are passed to the database provider, and rarely (if ever) generate SQL statements on their own:
+- **SqlBuilder** doesn't generate SQL statements
+- **QueryBuilder** (only if you're using [`/**where**/` keyword](/Builders.md#dynamic-query-with-where-keyword)) will only generate simple filtering clauses like `WHERE`/`AND`/`OR` that should work in all databases.
 
 ## Parameters prefix
 
 By default the parameters are generated using "at-parameters" format (the first parameter is named `@p0`, the next is `@p1`, etc), and that should work with most database providers (including PostgreSQL Npgsql).  
-If your provider doesn't accept at-parameters (like Oracle) you can modify `DapperQueryBuilderOptions.DatabaseParameterSymbol`:
+If your provider doesn't accept at-parameters (like Oracle) you can modify `DatabaseParameterSymbol`:
 
 ```cs
 // Default database-parameter-symbol is "@", which mean the underlying query will use @p0, @p1, etc..
 // Some database vendors (like Oracle) expect ":" parameters instead of "@" parameters
-DapperQueryBuilderOptions.DatabaseParameterSymbol = ":";
+InterpolatedSqlBuilderOptions.DefaultOptions.DatabaseParameterSymbol = "@";
 
 OracleConnection cn = new OracleConnection("DATA SOURCE=server;PASSWORD=password;PERSIST SECURITY INFO=True;USER ID=user");
 
@@ -183,10 +179,10 @@ var cmd = cn.QueryBuilder($"SELECT * FROM film WHERE title like {search}");
 // Underlying SQL will be: SELECT * FROM film WHERE title like :p0
 ```
 
-If for any reason you don't want parameters to be named `p0`, `p1`, etc, you can change the auto-naming prefix by setting `AutoGeneratedParameterName`:
+If for any reason you don't want parameters to be named `p0`, `p1`, etc, you can change the auto-naming prefix by setting `AutoGeneratedParameterPrefix`:
 
 ```cs
-DapperQueryBuilderOptions.AutoGeneratedParameterName = "PARAM_";
+InterpolatedSqlBuilderOptions.DefaultOptions.AutoGeneratedParameterPrefix = "PARAM_";
 
 // your parameters will be named @PARAM_0, @PARAM_1, etc..
 ```

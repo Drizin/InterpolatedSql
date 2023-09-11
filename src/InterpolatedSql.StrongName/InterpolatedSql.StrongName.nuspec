@@ -1,20 +1,16 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>DapperQueryBuilder.StrongName</id>
-    <title>DapperQueryBuilder (Strong Named)</title>
+    <id>InterpolatedSql.StrongName</id>
+    <title>InterpolatedSql (Strong Named)</title>
     <authors>Rick Drizin</authors>
     <owners>Rick Drizin</owners>
     <license type="expression">MIT</license>
-    <projectUrl>https://github.com/Drizin/DapperQueryBuilder</projectUrl>
+    <projectUrl>https://github.com/Drizin/InterpolatedSql</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>DapperQueryBuilder: Dapper Query Builder using String Interpolation and Fluent API</description>
-    <copyright>Copyright Rick Drizin 2020</copyright>
+    <description>InterpolatedSqlBuilder: Sql Builder using String Interpolation (injection-safe!)</description>
+    <copyright>Copyright Rick Drizin 2023</copyright>
     <dependencies>
     </dependencies>
   </metadata>
-  <files>
-    <file src="bin\$configuration$\DapperQueryBuilder.StrongName.*" target="lib\net472" />
-    <file src="bin\$configuration$\DapperQueryBuilder.StrongName.*" target="lib\netstandard2.0" />
-  </files>
 </package>

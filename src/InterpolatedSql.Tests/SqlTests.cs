@@ -7,7 +7,7 @@ namespace InterpolatedSql.Tests
     {
 
         [Test]
-        public void Test1() //TODO: move tests from DapperQueryBuilder.Tests to this project.
+        public void Test1() //TODO: move some tests from InterpolatedSql.Dapper.Tests to this project.
         {
             int val = 1;
             var s1 = new SqlBuilder($"INSERT INTO [Table] (col1) VALUES ({val});").Build();

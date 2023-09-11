@@ -7,8 +7,8 @@
     <owners>Rick Drizin</owners>
     <license type="expression">MIT</license>
     <projectUrl>https://github.com/Drizin/InterpolatedSql</projectUrl>
-	<requireLicenseAcceptance>false</requireLicenseAcceptance>
-	<description>InterpolatedSql.Dapper: Dapper Query Builder using String Interpolation and Fluent API</description>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>InterpolatedSql.Dapper: Dapper Query Builder using String Interpolation and Fluent API</description>
     <copyright>Copyright Rick Drizin 2020</copyright>
     <dependencies>
     </dependencies>

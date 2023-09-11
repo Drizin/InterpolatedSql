@@ -44,7 +44,7 @@ namespace InterpolatedSql.Dapper.Tests
             var q = new MyQueryBuilder(cn, $$"""
                 select
                     MyInnerTable.*
-                    /**select*/
+                    /**select**/
                 from
                     (
                         select 
@@ -82,7 +82,7 @@ namespace InterpolatedSql.Dapper.Tests
             Assert.AreEqual("""
                 select
                     MyInnerTable.*
-                    /**select*/
+                    /**select**/
                 from
                     (
                         select 
