@@ -141,18 +141,19 @@ namespace InterpolatedSql.SqlBuilders
                     ((matchKeyword = "{select}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
                 {
                     // Template has a Placeholder for SELECT
-                    _selects.InsertLiteral(0, "SELECT ");
                     combinedQuery.Remove(matchPos, matchKeyword.Length);
                     combinedQuery.Insert(matchPos, _selects.AsSql());
+                    combinedQuery.InsertLiteral(matchPos, "SELECT ");
                 }
                 else if (((matchKeyword = "/**selects**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
                         ((matchKeyword = "{selects}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
                 {
                     // Template has a placeholder for SELECTS - which means that
                     // SELECT should be already in template and user just wants to add more columns using "selects" placeholder
-                    _selects.InsertLiteral(0, ", ");
                     combinedQuery.Remove(matchPos, matchKeyword.Length);
                     combinedQuery.Insert(matchPos, _selects.AsSql());
+                    if (!_selects.ToString().StartsWith(", "))
+                        combinedQuery.InsertLiteral(matchPos, ", ");
                 }
             }
 
@@ -165,9 +166,9 @@ namespace InterpolatedSql.SqlBuilders
                     ((matchKeyword = "{from}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
                 {
                     // Template has a Placeholder for FROMs
-                    _froms.InsertLiteral(0, "FROM ");
                     combinedQuery.Remove(matchPos, matchKeyword.Length);
                     combinedQuery.Insert(matchPos, _froms.AsSql());
+                    combinedQuery.InsertLiteral(matchPos, "FROM ");
                 }
                 else if (((matchKeyword = "/**joins**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
                         ((matchKeyword = "{joins}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
@@ -188,17 +189,17 @@ namespace InterpolatedSql.SqlBuilders
                     ((matchKeyword = "{where}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
                 {
                     // Template has a Placeholder for Filters
-                    filters.InsertLiteral(0, "WHERE ");
                     combinedQuery.Remove(matchPos, matchKeyword.Length);
                     combinedQuery.Insert(matchPos, filters.AsSql());
+                    combinedQuery.InsertLiteral(matchPos, "WHERE ");
                 }
                 else if (((matchKeyword = "/**filters**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
                             ((matchKeyword = "{filters}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
                 {
                     // Template has a Placeholder for Filters
-                    filters.InsertLiteral(0, "AND ");
                     combinedQuery.Remove(matchPos, matchKeyword.Length);
                     combinedQuery.Insert(matchPos, filters.AsSql());
+                    combinedQuery.InsertLiteral(matchPos, "AND ");
                 }
                 else
                 {
@@ -206,7 +207,7 @@ namespace InterpolatedSql.SqlBuilders
                     // else...
                     //TODO: if Query Template was provided, check if Template ends has WHERE with real conditions... set hasWhereConditions=true 
                     // else...
-                    filters.InsertLiteral(0, "WHERE ");
+                    combinedQuery.AppendLiteral("WHERE ");
                     combinedQuery.Append(filters.AsSql());
                 }
             }
@@ -219,17 +220,17 @@ namespace InterpolatedSql.SqlBuilders
                     ((matchKeyword = "{groupby}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
                 {
                     // Template has a Placeholder for GROUP BY
-                    _groupBy.InsertLiteral(0, "GROUP BY ");
                     combinedQuery.Remove(matchPos, matchKeyword.Length);
                     combinedQuery.Insert(matchPos, _groupBy.AsSql());
+                    combinedQuery.InsertLiteral(matchPos, "GROUP BY ");
                 }
                 else if (((matchKeyword = "/**groupby_additional**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
                             ((matchKeyword = "{groupby_additional}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
                 {
                     // Template has a Placeholder for "adding more columns to" GROUP BY
-                    _groupBy.InsertLiteral(0, ", ");
                     combinedQuery.Remove(matchPos, matchKeyword.Length);
                     combinedQuery.Insert(matchPos, _groupBy.AsSql());
+                    combinedQuery.InsertLiteral(matchPos, ", ");
                 }
                 else
                 {
@@ -246,17 +247,17 @@ namespace InterpolatedSql.SqlBuilders
                     ((matchKeyword = "{having}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
                 {
                     // Template has a Placeholder for HAVING
-                    _having.InsertLiteral(0, "HAVING ");
                     combinedQuery.Remove(matchPos, matchKeyword.Length);
                     combinedQuery.Insert(matchPos, _having.AsSql());
+                    combinedQuery.InsertLiteral(matchPos, "HAVING ");
                 }
                 else if (((matchKeyword = "/**having_additional**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
                             ((matchKeyword = "{having_additional}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
                 {
                     // Template has a Placeholder for "adding more columns to" HAVING
-                    _having.InsertLiteral(0, ", ");
                     combinedQuery.Remove(matchPos, matchKeyword.Length);
                     combinedQuery.Insert(matchPos, _having.AsSql());
+                    combinedQuery.InsertLiteral(matchPos, ", ");
                 }
                 else
                 {
@@ -273,17 +274,17 @@ namespace InterpolatedSql.SqlBuilders
                     ((matchKeyword = "{orderby}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
                 {
                     // Template has a Placeholder for ORDER BY
-                    _orderBy.InsertLiteral(0, "ORDER BY ");
                     combinedQuery.Remove(matchPos, matchKeyword.Length);
                     combinedQuery.Insert(matchPos, _orderBy.AsSql());
+                    combinedQuery.InsertLiteral(matchPos, "ORDER BY ");
                 }
                 else if (((matchKeyword = "/**orderby_additional**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
                             ((matchKeyword = "{orderby_additional}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
                 {
                     // Template has a Placeholder for "adding more columns to" ORDER BY
-                    _orderBy.InsertLiteral(0, ", ");
                     combinedQuery.Remove(matchPos, matchKeyword.Length);
                     combinedQuery.Insert(matchPos, _orderBy.AsSql());
+                    combinedQuery.InsertLiteral(matchPos, ", ");
                 }
                 else
                 {
