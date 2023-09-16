@@ -3,6 +3,7 @@ using System;
 using System.Data;
 using SqlBuilder = InterpolatedSql.Dapper.SqlBuilders.SqlBuilder;
 using QueryBuilder = InterpolatedSql.Dapper.SqlBuilders.QueryBuilder;
+using InterpolatedSql.Dapper.SqlBuilders;
 
 namespace InterpolatedSql.Dapper
 {
@@ -18,7 +19,7 @@ namespace InterpolatedSql.Dapper
         /// Creates a new IInterpolatedSqlBuilder of type B over current connection
         /// </summary>
         public static B SqlBuilder<B>(this IDbConnection cnn)
-            where B : IInterpolatedSqlBuilderBase
+            where B : IDapperSqlBuilder
         {
             return SqlBuilderFactory.Create<B>(cnn);
         }
@@ -29,7 +30,7 @@ namespace InterpolatedSql.Dapper
         /// </summary>
         /// <param name="command">SQL command</param>
         public static B SqlBuilder<B>(this IDbConnection cnn, ref InterpolatedSqlHandler command)
-            where B : IInterpolatedSqlBuilderBase
+            where B : IDapperSqlBuilder
         {
             if (command.InterpolatedSqlBuilder.Options.AutoAdjustMultilineString)
                 command.AdjustMultilineString();
@@ -52,7 +53,7 @@ namespace InterpolatedSql.Dapper
         /// </summary>
         /// <param name="command">SQL command</param>
         public static B SqlBuilder<B>(this IDbConnection cnn, InterpolatedSqlBuilderOptions options, [System.Runtime.CompilerServices.InterpolatedStringHandlerArgument("options")] ref InterpolatedSqlHandler command)
-            where B : IInterpolatedSqlBuilderBase
+            where B : IDapperSqlBuilder
         {
             if (command.InterpolatedSqlBuilder.Options.AutoAdjustMultilineString)
                 command.AdjustMultilineString();
@@ -76,7 +77,7 @@ namespace InterpolatedSql.Dapper
         /// </summary>
         /// <param name="command">SQL command</param>
         public static B SqlBuilder<B>(this IDbConnection cnn, FormattableString command)
-            where B : IInterpolatedSqlBuilderBase
+            where B : IDapperSqlBuilder
         {
             return SqlBuilderFactory.Create<B>(cnn, command);
         }
@@ -95,7 +96,7 @@ namespace InterpolatedSql.Dapper
         /// </summary>
         /// <param name="command">SQL command</param>
         public static B SqlBuilder<B>(this IDbConnection cnn, InterpolatedSqlBuilderOptions options, FormattableString command)
-            where B : IInterpolatedSqlBuilderBase
+            where B : IDapperSqlBuilder
         {
             return SqlBuilderFactory.Create<B>(cnn, command, options);
         }

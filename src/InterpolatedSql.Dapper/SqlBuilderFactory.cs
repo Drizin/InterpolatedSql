@@ -1,4 +1,5 @@
-﻿using InterpolatedSql.SqlBuilders;
+﻿using InterpolatedSql.Dapper.SqlBuilders;
+using InterpolatedSql.SqlBuilders;
 using System;
 using System.Data;
 using SqlBuilder = InterpolatedSql.Dapper.SqlBuilders.SqlBuilder;
@@ -14,7 +15,7 @@ namespace InterpolatedSql.Dapper
         /// Creates a new IInterpolatedSqlBuilderBase of type B
         /// </summary>
         public virtual B Create<B>(IDbConnection connection)
-            where B : IInterpolatedSqlBuilderBase
+            where B : IDapperSqlBuilder
         {
             var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection) });
             B builder = (B)ctor.Invoke(new object[] { connection });
@@ -25,7 +26,7 @@ namespace InterpolatedSql.Dapper
         /// Creates a new IInterpolatedSqlBuilderBase of type B
         /// </summary>
         public virtual B Create<B>(IDbConnection connection, InterpolatedSqlBuilderOptions options)
-            where B : IInterpolatedSqlBuilderBase
+            where B : IDapperSqlBuilder
         {
             var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(InterpolatedSqlBuilderOptions) });
             B builder = (B)ctor.Invoke(new object[] { connection, options });
@@ -45,7 +46,7 @@ namespace InterpolatedSql.Dapper
         /// Creates a new IInterpolatedSqlBuilderBase of type B
         /// </summary>
         public virtual B Create<B>(IDbConnection connection, FormattableString command)
-            where B : IInterpolatedSqlBuilderBase
+            where B : IDapperSqlBuilder
         {
             var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(FormattableString) });
             B builder = (B)ctor.Invoke(new object[] { connection, command });
@@ -56,7 +57,7 @@ namespace InterpolatedSql.Dapper
         /// Creates a new IInterpolatedSqlBuilderBase of type B
         /// </summary>
         public virtual B Create<B>(IDbConnection connection, FormattableString command, InterpolatedSqlBuilderOptions? options = null)
-            where B : IInterpolatedSqlBuilderBase
+            where B : IDapperSqlBuilder
         {
             var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(FormattableString), typeof(InterpolatedSqlBuilderOptions) });
             B builder = (B)ctor.Invoke(new object[] { connection, command, options });
@@ -68,7 +69,7 @@ namespace InterpolatedSql.Dapper
         /// Creates a new IInterpolatedSqlBuilderBase of type B
         /// </summary>
         public virtual B Create<B>(IDbConnection connection, int literalLength, int formattedCount)
-            where B : IInterpolatedSqlBuilderBase
+            where B : IDapperSqlBuilder
         {
             var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(int), typeof(int) });
             B builder = (B)ctor.Invoke(new object[] { connection, literalLength, formattedCount });
@@ -79,7 +80,7 @@ namespace InterpolatedSql.Dapper
         /// Creates a new IInterpolatedSqlBuilder of type B
         /// </summary>
         public virtual B Create<B>(IDbConnection connection, int literalLength, int formattedCount, InterpolatedSqlBuilderOptions? options = null)
-            where B : IInterpolatedSqlBuilderBase
+            where B : IDapperSqlBuilder
         {
             var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(int), typeof(int), typeof(InterpolatedSqlBuilderOptions) });
             B builder = (B)ctor.Invoke(new object?[] { connection, literalLength, formattedCount, options });

@@ -1,5 +1,4 @@
-﻿using InterpolatedSql.Dapper.SqlBuilders.InterpolatedSqlBuilder;
-using InterpolatedSql.SqlBuilders;
+﻿using InterpolatedSql.SqlBuilders;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,7 +7,7 @@ using System.Text;
 namespace InterpolatedSql.Dapper.SqlBuilders
 {
     /// <inheritdoc/>
-    public class SqlBuilder : SqlBuilder<SqlBuilder, IDapperSqlCommand>, ISqlBuilder
+    public class SqlBuilder : SqlBuilder<SqlBuilder, IDapperSqlCommand>, ISqlBuilder, IDapperSqlBuilder
     {
         #region ctors
         /// <inheritdoc />

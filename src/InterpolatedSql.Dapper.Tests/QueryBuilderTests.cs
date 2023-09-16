@@ -4,7 +4,6 @@ using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using InterpolatedSql.Dapper.SqlBuilders.Legacy;
 using InterpolatedSql.SqlBuilders;
 
 namespace InterpolatedSql.Dapper.Tests

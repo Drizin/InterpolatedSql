@@ -23,7 +23,7 @@ namespace InterpolatedSql.Dapper
                 pos.ToString();
         }
 
-        private bool IsEnumerable(object? value)
+        protected bool IsEnumerable(object? value)
         {
             if (value == null || value is DBNull)  //SqlMapper.GetDbType
                 return false;

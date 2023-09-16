@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 
-namespace InterpolatedSql.Dapper.SqlBuilders.InterpolatedSqlBuilder
+namespace InterpolatedSql.Dapper
 {
     /// <summary>
     /// Immutable implementation of <see cref="IDapperSqlCommand"/>.
@@ -17,6 +17,7 @@ namespace InterpolatedSql.Dapper.SqlBuilders.InterpolatedSqlBuilder
         /// <summary>Sql Parameters converted into Dapper format</summary>
         public ParametersDictionary DapperParameters { get; }
 
+        /// <inheritdoc />
         public ImmutableDapperCommand(IDbConnection connection,
             string sql, string format, IReadOnlyList<InterpolatedSqlParameter> sqlParameters, IReadOnlyList<SqlParameterInfo> explicitParameters) : base(sql, format, sqlParameters, explicitParameters)
         {

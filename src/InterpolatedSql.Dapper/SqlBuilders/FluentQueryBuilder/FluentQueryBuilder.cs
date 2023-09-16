@@ -13,7 +13,8 @@ namespace InterpolatedSql.Dapper.SqlBuilders.FluentQueryBuilder
     /// </summary>
     public class FluentQueryBuilder : global::InterpolatedSql.SqlBuilders.FluentQueryBuilder.FluentQueryBuilder<IFluentQueryBuilder, SqlBuilder, IDapperSqlCommand>,
         IFluentQueryBuilder,
-        IBuildable<IDapperSqlCommand>
+        IBuildable<IDapperSqlCommand>,
+        IDapperSqlBuilder
     {
         #region ctors
         /// <inheritdoc/>

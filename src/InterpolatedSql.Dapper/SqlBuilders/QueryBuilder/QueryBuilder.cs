@@ -4,7 +4,7 @@ using System.Data;
 namespace InterpolatedSql.Dapper.SqlBuilders
 {
     /// <inheritdoc/>
-    public class QueryBuilder : QueryBuilder<QueryBuilder, ISqlBuilder, IDapperSqlCommand>, IQueryBuilder
+    public class QueryBuilder : QueryBuilder<QueryBuilder, ISqlBuilder, IDapperSqlCommand>, IQueryBuilder, IDapperSqlBuilder
     {
         #region ctors
         /// <inheritdoc/>

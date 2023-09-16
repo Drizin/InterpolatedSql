@@ -11,9 +11,8 @@
         where R: class, IInterpolatedSql
     {
         /// <summary>
-        /// Creates final query
+        /// Builds the SQL statement
         /// </summary>
-        /// <returns></returns>
         R Build();
     }
 }

@@ -702,19 +702,6 @@ namespace InterpolatedSql.SqlBuilders
             }
         }
 
-        //protected IInterpolatedSql Unwrap()
-        //{
-        //    // tirar loop , retornar null se for igual, e cosaslwesce e property privada
-        //    object current = this;
-        //    IBuildable? buildable;
-        //    if ((buildable = current as IBuildable) == null)
-        //        return null;
-        //    var built = buildable.Build();
-        //    if (ReferenceEquals(built, current)) // some builders will just return itself during Built(), with no transformation
-        //        return null;
-        //    return built;
-        //}
-
         /// <summary>
         /// Casts the current builder into an IInterpolatedSql using a wrapper.
         /// The underlying properties (Sql, SqlParameters, etc) are the same - they are not copied.

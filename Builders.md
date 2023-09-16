@@ -51,7 +51,7 @@ q += $"AND Weight <= {maxWeight}";
 q += $"AND Name LIKE {search}";
 q += $"ORDER BY ProductId";
 
-var products = q.Build().Query<Product>();
+var products = q.Query<Product>();
 // all other Dapper extensions are also available: QueryAsync, QueryMultiple, ExecuteScalar, etc..
 ```
 
@@ -95,8 +95,7 @@ var innerQuery = cn.SqlBuilder($"SELECT Id, Name FROM SomeTable where Organizati
 var q = cn.QueryBuilder($@"
     SELECT FROM ({innerQuery}) a 
     JOIN AnotherTable b ON a.Id=b.Id 
-    WHERE b.OrganizationId={321}")
-    .Build();
+    WHERE b.OrganizationId={321}");
 
 // q.Sql is like:
 // SELECT FROM (SELECT Id, Name FROM SomeTable where OrganizationId=@p0) a 
@@ -110,7 +109,7 @@ If you prefer to use standard types for your subqueries, just declare them as Fo
 FormattableString innerQuery = $"SELECT Id, Name FROM SomeTable where OrganizationId={orgId}"; // do not use "var" !
 var q = cn.QueryBuilder($@"
     SELECT FROM ({innerQuery}) a
-    ...").Build();
+    ...");
 ```
 
 ## IN lists
@@ -162,7 +161,7 @@ q.Where($"Weight <= {maxWeight}");
 q.Where($"Name LIKE {search}");
 
 // Query() will automatically render your query and replace /**where**/ keyword (if any filter was added)
-var products = q.Build().Query<Product>();
+var products = q.Query<Product>();
 
 // In this case Dapper would get "WHERE ListPrice <= @p0 AND Weight <= @p1 AND Name LIKE @p2" and the associated values
 ```
@@ -219,7 +218,7 @@ q.Where(priceFilters);
 // priceFilters.FiltersType = Filters.FiltersType.AND;
 // /**where**/ would be replaced as "Status=@p0 OR (ListPrice >= @p1 AND ListPrice >= @p2)".
 
-var products = q.Build().Query<Product>();
+var products = q.Query<Product>();
 ```
 
 To sum, `Filters` class will render whatever conditions you define, conditions can be combined with `AND` or `OR`, and conditions can be defined as inner filters (will use parentheses).
@@ -245,7 +244,7 @@ var q = cn.FluentQueryBuilder()
     .Where($"Name LIKE {search}")
     .OrderBy($"ProductId");
     
-var products = q.Build().Query<Product>();
+var products = q.Query<Product>();
 ```
 
 You would get this query:
@@ -400,7 +399,7 @@ var q = cn.QueryBuilder($@"
     SELECT Name, ListPrice, Weight
     FROM Product
     WHERE ProductId={productId}");
-var productDetails = q.Build().QuerySingle<(string Name, decimal ListPrice, decimal Weight)>();
+var productDetails = q.QuerySingle<(string Name, decimal ListPrice, decimal Weight)>();
 ```
 
 Warning: Dapper Tuple mapping is based on positions (it's not possible to map by names)
@@ -415,7 +414,7 @@ Warning: Dapper Tuple mapping is based on positions (it's not possible to map by
 var query = cn.QueryBuilder($"SELECT * FROM Product WHERE 1=1");
 query += $"AND Name LIKE {productName}"; 
 query += $"AND ProductSubcategoryID = {subCategoryId}"; 
-var products = query.Build().Query<Product>(); 
+var products = query.Query<Product>(); 
 ```
 
 No need to worry about adding a space before or after a new clause. We'll handle that for you
@@ -429,7 +428,7 @@ If by mistake you add single quotes around interpolated arguments (as if it was 
 cn.SqlBuilder($@"
    INSERT INTO Product (ProductName, ProductSubCategoryId)
    VALUES ('{productName}', '{ProductSubcategoryID}')
-").Build().Execute();
+").Execute();
 // Dapper will get "... VALUES (@p0, @p1) " (we'll remove the surrounding single quotes)
 ```
 
@@ -446,7 +445,7 @@ If you use the same value twice in the query we'll just pass it once and reuse t
 ```cs
 InterpolatedSqlBuilderOptions.DefaultOptions.ReuseIdenticalParameters = true; // default is false
 string productName = "Computer";
-var products = cn.QueryBuilder($"SELECT * FROM Product WHERE Name = {productName} OR Category = {productName}").Build().Query<Product>;
+var products = cn.QueryBuilder($"SELECT * FROM Product WHERE Name = {productName} OR Category = {productName}").Query<Product>;
 // Dapper will get "... WHERE Name = @p0 OR Category = @p0 " (we'll send @p0 only once)
 ```
 
@@ -461,7 +460,7 @@ var products = cn
     WHERE
     Name LIKE {productName}
     AND ProductSubcategoryID = {subCategoryId}
-    ORDER BY ProductId").Build().Query<Product>;
+    ORDER BY ProductId").Query<Product>;
 ```
 
 Since this is a multi-line interpolated string we'll automatically trim the first empty line and "dock to the left"  (remove left padding). What Dapper receives does not have whitespace, making it easier for logging or debugging:
@@ -484,8 +483,7 @@ var cmd = cn.SqlBuilder($"HumanResources.uspUpdateEmployeePersonalInfo")
     .AddParameter("NationalIDNumber", nationalIDNumber)
     .AddParameter("BirthDate", birthDate)
     .AddParameter("MaritalStatus", maritalStatus)
-    .AddParameter("Gender", gender)
-    .Build();
+    .AddParameter("Gender", gender);
     
 int affected = cmd.Execute(commandType: CommandType.StoredProcedure);
 int returnValue = cmd.Parameters.Get<int>("ReturnValue");

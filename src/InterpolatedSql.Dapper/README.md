@@ -41,8 +41,7 @@ int categoryId = 10;
 var cn = new SqlConnection(connectionString);
 
 // Build() will return an object of type InterpolatedSql.Dapper.IDapperSqlCommand
-var query = cn.SqlBuilder($"SELECT * FROM Product WHERE CategoryId={categoryId}")
-    .Build();
+var query = cn.SqlBuilder($"SELECT * FROM Product WHERE CategoryId={categoryId}");
 // it will have these values:
 // query.Sql == "SELECT * FROM Product WHERE CategoryId=@p0"
 // query.Parameters["p0"].Value == 10
@@ -63,8 +62,7 @@ string productName = "Computer";
 decimal price = 10.30;
 var cn = new SqlConnection(connectionString);
 
-var cmd = cn.SqlBuilder($"INSERT INTO Product (CategoryId, ProductName, Price) VALUES ({categoryId}, {productName}, {price})")
-    .Build();
+var cmd = cn.SqlBuilder($"INSERT INTO Product (CategoryId, ProductName, Price) VALUES ({categoryId}, {productName}, {price})");
 cmd.Execute();
 
 // cmd.Sql == "INSERT INTO Product (CategoryId, ProductName, Price) VALUES (@p0, @p1, @p2)"
@@ -89,8 +87,7 @@ var query = cn.SqlBuilder($@"
     CategoryID = {categoryId}
     AND Price <= {price}
     AND Name LIKE {productName}
-    ORDER BY ProductId"
-    ).Build();
+    ORDER BY ProductId");
 var product = query.Query<Product>();
 
 /*
@@ -124,7 +121,7 @@ if (!string.IsNullOrEmpty(productName))
     query += $"AND Name LIKE {productName}";
 if (subCategoryId > 0)
     query += $"AND ProductSubcategoryID = {subCategoryId}";
-var product = query.Build().Query<Product>(); 
+var product = query.Query<Product>(); 
 ```
 
 If it wasn't for a single structure wrapping both the SQL text and the SQL Parameters, you would have to maintain two independent objects - a StringBuilder and a parameters dictionary.

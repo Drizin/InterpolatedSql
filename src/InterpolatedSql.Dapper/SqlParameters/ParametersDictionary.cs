@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using InterpolatedSql.Dapper.SqlBuilders;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -29,7 +30,7 @@ namespace InterpolatedSql.Dapper
             var parameters = new ParametersDictionary();
             //HashSet<string> parmNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase); //TODO: check for name clashes, rename as required
 
-            calculateAutoParameterName ??=  ((sql as IInterpolatedSqlBuilderBase)?.Options?.CalculateAutoParameterName ?? InterpolatedSql.SqlBuilders.InterpolatedSqlBuilderOptions.DefaultOptions.CalculateAutoParameterName);
+            calculateAutoParameterName ??=  ((sql as IDapperSqlBuilder)?.Options?.CalculateAutoParameterName ?? InterpolatedSql.SqlBuilders.InterpolatedSqlBuilderOptions.DefaultOptions.CalculateAutoParameterName);
 
             for (int i = 0; i < sql.ExplicitParameters.Count; i++)
             {

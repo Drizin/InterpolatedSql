@@ -15,7 +15,7 @@ namespace InterpolatedSql.Dapper.SqlBuilders
     /// </summary>
     public abstract class QueryBuilder<U, RB, R> : global::InterpolatedSql.SqlBuilders.QueryBuilder<U, RB, R>, IQueryBuilder<U, RB, R>
         where U : IQueryBuilder<U, RB, R>, ISqlBuilder<U, R>, IBuildable<R>
-        where RB : IInterpolatedSqlBuilderBase, IBuildable<R>
+        where RB : IDapperSqlBuilder, IBuildable<R>
         where R : class, IInterpolatedSql, IDapperSqlCommand
     {
         #region ctors

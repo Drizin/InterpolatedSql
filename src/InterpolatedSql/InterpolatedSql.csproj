@@ -8,7 +8,7 @@
 		<Description>SQL Builder using Fluent API and String Interpolation</Description>
 		<Copyright>Rick Drizin</Copyright>
 		<Company>Rick Drizin</Company>
-		<Version>2.0.0-beta3</Version>
+		<Version>2.0.0</Version>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<Title>InterpolatedSql</Title>
 		<PackageId>InterpolatedSql</PackageId>

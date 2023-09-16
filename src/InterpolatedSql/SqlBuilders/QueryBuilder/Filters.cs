@@ -101,7 +101,7 @@ namespace InterpolatedSql.SqlBuilders
             WriteTo(command);
             if (!command.IsEmpty && !command.Format.StartsWith("WHERE "))
                 command.InsertLiteral(0, "WHERE ");
-            return command.Build();
+            return command.AsSql();
         }
 
         private string DebuggerDisplay 
