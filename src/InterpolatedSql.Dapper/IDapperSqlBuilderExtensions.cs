@@ -553,5 +553,164 @@ namespace InterpolatedSql.Dapper
 
         #endregion
 
+        #region Dapper Multi-mapping query (async)
+        /// <summary>
+        /// Perform a multi-mapping query with 2 input types.
+        /// This returns a single type, combined from the raw types via <paramref name="map"/>.
+        /// </summary>
+        /// <typeparam name="TFirst">The first type in the recordset.</typeparam>
+        /// <typeparam name="TSecond">The second type in the recordset.</typeparam>
+        /// <typeparam name="TReturn">The combined type to return.</typeparam>
+        /// <param name="map">The function to map row types to the return type.</param>
+        /// <param name="transaction">The transaction to use for this query.</param>
+        /// <param name="buffered">Whether to buffer the results in memory.</param>
+        /// <param name="splitOn">The field we should split and read the second object from (default: "Id").</param>
+        /// <param name="commandTimeout">Number of seconds before command execution timeout.</param>
+        /// <param name="commandType">Is it a stored proc or a batch?</param>
+        /// <returns>An enumerable of <typeparamref name="TReturn"/>.</returns>
+        public static Task<IEnumerable<TReturn>> QueryAsync<TFirst, TSecond, TReturn>(this IDapperSqlBuilder builder, Func<TFirst, TSecond, TReturn> map, IDbTransaction transaction = null, bool buffered = true, string splitOn = "Id", int? commandTimeout = null, CommandType? commandType = null)
+        {
+            var command = builder.Build();
+            return command.DbConnection.QueryAsync<TFirst, TSecond, TReturn>(sql: command.Sql, map: map, param: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, buffered: buffered, splitOn: splitOn);
+        }
+
+
+        /// <summary>
+        /// Perform a multi-mapping query with 3 input types.
+        /// This returns a single type, combined from the raw types via <paramref name="map"/>.
+        /// </summary>
+        /// <typeparam name="TFirst">The first type in the recordset.</typeparam>
+        /// <typeparam name="TSecond">The second type in the recordset.</typeparam>
+        /// <typeparam name="TThird">The third type in the recordset.</typeparam>
+        /// <typeparam name="TReturn">The combined type to return.</typeparam>
+        /// <param name="map">The function to map row types to the return type.</param>
+        /// <param name="transaction">The transaction to use for this query.</param>
+        /// <param name="buffered">Whether to buffer the results in memory.</param>
+        /// <param name="splitOn">The field we should split and read the second object from (default: "Id").</param>
+        /// <param name="commandTimeout">Number of seconds before command execution timeout.</param>
+        /// <param name="commandType">Is it a stored proc or a batch?</param>
+        /// <returns>An enumerable of <typeparamref name="TReturn"/>.</returns>
+        public static Task<IEnumerable<TReturn>> QueryAsync<TFirst, TSecond, TThird, TReturn>(this IDapperSqlBuilder builder, Func<TFirst, TSecond, TThird, TReturn> map, IDbTransaction transaction = null, bool buffered = true, string splitOn = "Id", int? commandTimeout = null, CommandType? commandType = null)
+        {
+            var command = builder.Build();
+            return command.DbConnection.QueryAsync<TFirst, TSecond, TThird, TReturn>(sql: command.Sql, map: map, param: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, buffered: buffered, splitOn: splitOn);
+        }
+
+        /// <summary>
+        /// Perform a multi-mapping query with 4 input types.
+        /// This returns a single type, combined from the raw types via <paramref name="map"/>.
+        /// </summary>
+        /// <typeparam name="TFirst">The first type in the recordset.</typeparam>
+        /// <typeparam name="TSecond">The second type in the recordset.</typeparam>
+        /// <typeparam name="TThird">The third type in the recordset.</typeparam>
+        /// <typeparam name="TFourth">The fourth type in the recordset.</typeparam>
+        /// <typeparam name="TReturn">The combined type to return.</typeparam>
+        /// <param name="map">The function to map row types to the return type.</param>
+        /// <param name="transaction">The transaction to use for this query.</param>
+        /// <param name="buffered">Whether to buffer the results in memory.</param>
+        /// <param name="splitOn">The field we should split and read the second object from (default: "Id").</param>
+        /// <param name="commandTimeout">Number of seconds before command execution timeout.</param>
+        /// <param name="commandType">Is it a stored proc or a batch?</param>
+        /// <returns>An enumerable of <typeparamref name="TReturn"/>.</returns>
+        public static Task<IEnumerable<TReturn>> QueryAsync<TFirst, TSecond, TThird, TFourth, TReturn>(this IDapperSqlBuilder builder, Func<TFirst, TSecond, TThird, TFourth, TReturn> map, IDbTransaction transaction = null, bool buffered = true, string splitOn = "Id", int? commandTimeout = null, CommandType? commandType = null)
+        {
+            var command = builder.Build();
+            return command.DbConnection.QueryAsync<TFirst, TSecond, TThird, TFourth, TReturn>(sql: command.Sql, map: map, param: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, buffered: buffered, splitOn: splitOn);
+        }
+
+        /// <summary>
+        /// Perform a multi-mapping query with 5 input types.
+        /// This returns a single type, combined from the raw types via <paramref name="map"/>.
+        /// </summary>
+        /// <typeparam name="TFirst">The first type in the recordset.</typeparam>
+        /// <typeparam name="TSecond">The second type in the recordset.</typeparam>
+        /// <typeparam name="TThird">The third type in the recordset.</typeparam>
+        /// <typeparam name="TFourth">The fourth type in the recordset.</typeparam>
+        /// <typeparam name="TFifth">The fifth type in the recordset.</typeparam>
+        /// <typeparam name="TReturn">The combined type to return.</typeparam>
+        /// <param name="map">The function to map row types to the return type.</param>
+        /// <param name="transaction">The transaction to use for this query.</param>
+        /// <param name="buffered">Whether to buffer the results in memory.</param>
+        /// <param name="splitOn">The field we should split and read the second object from (default: "Id").</param>
+        /// <param name="commandTimeout">Number of seconds before command execution timeout.</param>
+        /// <param name="commandType">Is it a stored proc or a batch?</param>
+        /// <returns>An enumerable of <typeparamref name="TReturn"/>.</returns>
+        public static Task<IEnumerable<TReturn>> QueryAsync<TFirst, TSecond, TThird, TFourth, TFifth, TReturn>(this IDapperSqlBuilder builder, Func<TFirst, TSecond, TThird, TFourth, TFifth, TReturn> map, IDbTransaction transaction = null, bool buffered = true, string splitOn = "Id", int? commandTimeout = null, CommandType? commandType = null)
+        {
+            var command = builder.Build();
+            return command.DbConnection.QueryAsync<TFirst, TSecond, TThird, TFourth, TFifth, TReturn>(sql: command.Sql, map: map, param: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, buffered: buffered, splitOn: splitOn);
+        }
+
+        /// <summary>
+        /// Perform a multi-mapping query with 6 input types.
+        /// This returns a single type, combined from the raw types via <paramref name="map"/>.
+        /// </summary>
+        /// <typeparam name="TFirst">The first type in the recordset.</typeparam>
+        /// <typeparam name="TSecond">The second type in the recordset.</typeparam>
+        /// <typeparam name="TThird">The third type in the recordset.</typeparam>
+        /// <typeparam name="TFourth">The fourth type in the recordset.</typeparam>
+        /// <typeparam name="TFifth">The fifth type in the recordset.</typeparam>
+        /// <typeparam name="TSixth">The sixth type in the recordset.</typeparam>
+        /// <typeparam name="TReturn">The combined type to return.</typeparam>
+        /// <param name="map">The function to map row types to the return type.</param>
+        /// <param name="transaction">The transaction to use for this query.</param>
+        /// <param name="buffered">Whether to buffer the results in memory.</param>
+        /// <param name="splitOn">The field we should split and read the second object from (default: "Id").</param>
+        /// <param name="commandTimeout">Number of seconds before command execution timeout.</param>
+        /// <param name="commandType">Is it a stored proc or a batch?</param>
+        /// <returns>An enumerable of <typeparamref name="TReturn"/>.</returns>
+        public static Task<IEnumerable<TReturn>> QueryAsync<TFirst, TSecond, TThird, TFourth, TFifth, TSixth, TReturn>(this IDapperSqlBuilder builder, Func<TFirst, TSecond, TThird, TFourth, TFifth, TSixth, TReturn> map, IDbTransaction transaction = null, bool buffered = true, string splitOn = "Id", int? commandTimeout = null, CommandType? commandType = null)
+        {
+            var command = builder.Build();
+            return command.DbConnection.QueryAsync<TFirst, TSecond, TThird, TFourth, TFifth, TSixth, TReturn>(sql: command.Sql, map: map, param: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, buffered: buffered, splitOn: splitOn);
+        }
+
+        /// <summary>
+        /// Perform a multi-mapping query with 7 input types. If you need more types -> use Query with Type[] parameter.
+        /// This returns a single type, combined from the raw types via <paramref name="map"/>.
+        /// </summary>
+        /// <typeparam name="TFirst">The first type in the recordset.</typeparam>
+        /// <typeparam name="TSecond">The second type in the recordset.</typeparam>
+        /// <typeparam name="TThird">The third type in the recordset.</typeparam>
+        /// <typeparam name="TFourth">The fourth type in the recordset.</typeparam>
+        /// <typeparam name="TFifth">The fifth type in the recordset.</typeparam>
+        /// <typeparam name="TSixth">The sixth type in the recordset.</typeparam>
+        /// <typeparam name="TSeventh">The seventh type in the recordset.</typeparam>
+        /// <typeparam name="TReturn">The combined type to return.</typeparam>
+        /// <param name="map">The function to map row types to the return type.</param>
+        /// <param name="transaction">The transaction to use for this query.</param>
+        /// <param name="buffered">Whether to buffer the results in memory.</param>
+        /// <param name="splitOn">The field we should split and read the second object from (default: "Id").</param>
+        /// <param name="commandTimeout">Number of seconds before command execution timeout.</param>
+        /// <param name="commandType">Is it a stored proc or a batch?</param>
+        /// <returns>An enumerable of <typeparamref name="TReturn"/>.</returns>
+        public static Task<IEnumerable<TReturn>> QueryAsync<TFirst, TSecond, TThird, TFourth, TFifth, TSixth, TSeventh, TReturn>(this IDapperSqlBuilder builder, Func<TFirst, TSecond, TThird, TFourth, TFifth, TSixth, TSeventh, TReturn> map, IDbTransaction transaction = null, bool buffered = true, string splitOn = "Id", int? commandTimeout = null, CommandType? commandType = null)
+        {
+            var command = builder.Build();
+            return command.DbConnection.QueryAsync<TFirst, TSecond, TThird, TFourth, TFifth, TSixth, TSeventh, TReturn>(sql: command.Sql, map: map, param: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, buffered: buffered, splitOn: splitOn);
+        }
+
+        /// <summary>
+        /// Perform a multi-mapping query with an arbitrary number of input types.
+        /// This returns a single type, combined from the raw types via <paramref name="map"/>.
+        /// </summary>
+        /// <typeparam name="TReturn">The combined type to return.</typeparam>
+        /// <param name="types">Array of types in the recordset.</param>
+        /// <param name="map">The function to map row types to the return type.</param>
+        /// <param name="transaction">The transaction to use for this query.</param>
+        /// <param name="buffered">Whether to buffer the results in memory.</param>
+        /// <param name="splitOn">The field we should split and read the second object from (default: "Id").</param>
+        /// <param name="commandTimeout">Number of seconds before command execution timeout.</param>
+        /// <param name="commandType">Is it a stored proc or a batch?</param>
+        /// <returns>An enumerable of <typeparamref name="TReturn"/>.</returns>
+        public static Task<IEnumerable<TReturn>> QueryAsync<TReturn>(this IDapperSqlBuilder builder, Type[] types, Func<object[], TReturn> map, IDbTransaction transaction = null, bool buffered = true, string splitOn = "Id", int? commandTimeout = null, CommandType? commandType = null)
+        {
+            var command = builder.Build();
+            return command.DbConnection.QueryAsync<TReturn>(sql: command.Sql, types, map: map, param: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, buffered: buffered, splitOn: splitOn);
+        }
+
+        #endregion
+
+
     }
 }
