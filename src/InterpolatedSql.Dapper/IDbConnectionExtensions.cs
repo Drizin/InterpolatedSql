@@ -8,7 +8,7 @@ using InterpolatedSql.Dapper.SqlBuilders;
 namespace InterpolatedSql.Dapper
 {
     /// <summary>
-    /// Extends IDbConnection to easily build QueryBuilder or FluentQueryBuilder
+    /// Extends IDbConnection to easily build QueryBuilder or SqlBuilder
     /// </summary>
     public static partial class IDbConnectionExtensions
     {

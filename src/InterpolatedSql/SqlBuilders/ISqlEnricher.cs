@@ -7,7 +7,7 @@ namespace InterpolatedSql
     /// Usually those classes have an underlying SqlBuilder which is stores an initial template, and then there are some commands where users can fill the template blanks,
     /// and the <see cref="GetEnrichedSql"/> will combine all inputs returning a single Sql.
     /// </summary>
-    public interface ISqlEnricher : IInterpolatedSqlBuilderBase
+    public interface ISqlEnricher
     {
         /// <summary>
         /// Dynamically build SQL 

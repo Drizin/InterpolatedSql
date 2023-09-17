@@ -12,7 +12,7 @@ namespace InterpolatedSql
         /// <summary>
         /// Value of argument embedded into Interpolated String. Like <see cref="FormattableString.GetArguments"/>
         /// </summary>
-        public object? Argument { get; set; }
+        public object? Argument { get; set; } //TODO: rename to Value? like DapperParameters
 
         /// <summary>
         /// Each argument embedded into FormattableString may have a format specifier which will be kept here.
