@@ -129,6 +129,7 @@ namespace InterpolatedSql.Dapper.Tests
         }
 
         [Test]
+        [NonParallelizable]
         public void Test2()
         {
             DateTime asOfDate = DateTime.Now;
@@ -142,6 +143,8 @@ namespace InterpolatedSql.Dapper.Tests
 
             var query = cn.QueryBuilder($"Select * from Users Where ModifiedDate >= {asOfDate:asOfDate}").Build();
             Assert.AreEqual("Select * from Users Where ModifiedDate >= @asOfDate", query.Sql);
+
+            InterpolatedSqlDapperOptions.InterpolatedSqlParameterParser = new SqlParameterMapper();
         }
 
     }

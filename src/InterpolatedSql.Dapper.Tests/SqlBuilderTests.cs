@@ -6,6 +6,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using InterpolatedSql;
 using InterpolatedSql.SqlBuilders;
+using System.Threading.Tasks;
 //using TestHelper = InterpolatedSql.Dapper.Tests.TestHelper;
 
 namespace InterpolatedSql.Dapper.Tests
@@ -177,6 +178,19 @@ ORDER BY [ProductId]", query.Build().Sql);
                 .AddParameter("Gender", gender);
             int affected = q.Execute(commandType: CommandType.StoredProcedure);
         }
+
+        [Test]
+        public async Task TestStoredProcedureAsync()
+        {
+            var q = await cn.SqlBuilder($"[HumanResources].[uspUpdateEmployeePersonalInfo]")
+                .AddParameter("BusinessEntityID", businessEntityID)
+                .AddParameter("NationalIDNumber", nationalIDNumber)
+                .AddParameter("BirthDate", birthDate)
+                .AddParameter("MaritalStatus", maritalStatus)
+                .AddParameter("Gender", gender)
+                .ExecuteAsync(commandType: CommandType.StoredProcedure);
+        }
+
 
         [Test]
         public void TestStoredProcedureExec()

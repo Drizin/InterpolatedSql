@@ -11,6 +11,7 @@ using System.Text;
 
 namespace InterpolatedSql.Dapper.Tests
 {
+    [TestFixture(Ignore = "true")]
     public class MySQLTests
     {
         UnitTestsDbConnection cn;

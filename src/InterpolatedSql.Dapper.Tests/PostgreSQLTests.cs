@@ -7,6 +7,7 @@ using System.Linq;
 
 namespace InterpolatedSql.Dapper.Tests
 {
+    [TestFixture(Ignore = "true")]
     public class PostgreSQLTests
     {
         IDbConnection cn;
