@@ -287,7 +287,7 @@ namespace InterpolatedSql
                 else if (argumentValue is string && (m = regexDbTypeText.Match(testedFormat)) != null && m.Success) // text / varchar(MAX) / varchar(-1)
                     argumentValue = new StringParameterInfo()
                     {
-                        IsAnsi = false,
+                        IsAnsi = true,
                         IsFixedLength = true,
                         Value = (string)argumentValue,
                         Length = int.MaxValue
@@ -296,7 +296,7 @@ namespace InterpolatedSql
                 else if (argumentValue is string && (m = regexDbTypeNText.Match(testedFormat)) != null && m.Success) // ntext / nvarchar(MAX) / nvarchar(-1)
                     argumentValue = new StringParameterInfo()
                     {
-                        IsAnsi = true,
+                        IsAnsi = false,
                         IsFixedLength = true,
                         Value = (string)argumentValue,
                         Length = int.MaxValue
@@ -341,7 +341,7 @@ namespace InterpolatedSql
                 else if (argumentValue is IEnumerable<string> && (m = regexDbTypeText.Match(testedFormat)) != null && m.Success) // text / varchar(MAX) / varchar(-1)
                     argumentValue = ((IEnumerable<string>)argumentValue).Select(str => new StringParameterInfo()
                     {
-                        IsAnsi = false,
+                        IsAnsi = true,
                         IsFixedLength = true,
                         Value = str,
                         Length = int.MaxValue
@@ -350,7 +350,7 @@ namespace InterpolatedSql
                 else if (argumentValue is IEnumerable<string> && (m = regexDbTypeNText.Match(testedFormat)) != null && m.Success) // ntext / nvarchar(MAX) / nvarchar(-1)
                     argumentValue = ((IEnumerable<string>)argumentValue).Select(str => new StringParameterInfo()
                     {
-                        IsAnsi = true,
+                        IsAnsi = false,
                         IsFixedLength = true,
                         Value = str,
                         Length = int.MaxValue
