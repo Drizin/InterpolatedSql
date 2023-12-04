@@ -70,5 +70,30 @@ namespace InterpolatedSql
         public override string ToString() =>
             $"StringParameterInfo (Value: '{Value}', Length: {Length}, IsAnsi: {IsAnsi}, IsFixedLength: {IsFixedLength})";
 
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current object.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+
+            StringParameterInfo other = (obj as StringParameterInfo)!;
+            if (other == null) return false;
+
+            if (!base.Equals(other))
+                return false;
+            if (IsAnsi != other.IsAnsi)
+                return false;
+            if (IsFixedLength != other.IsFixedLength)
+                return false;
+            if (Length != other.Length)
+                return false;
+            return true;
+        }
+
     }
 }

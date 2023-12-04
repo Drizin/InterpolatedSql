@@ -145,6 +145,28 @@ namespace InterpolatedSql
 
             return newExpression.Compile();
         }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current object.
+        /// </summary>
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+
+            SqlParameterInfo other = (obj as SqlParameterInfo)!;
+            if (other == null) return false;
+
+            if (Name != other.Name)
+                return false;
+            if (Value != other.Value)
+                return false;
+            if (ParameterDirection != other.ParameterDirection)
+                return false;
+            return true;
+        }
         #endregion
 
     }
