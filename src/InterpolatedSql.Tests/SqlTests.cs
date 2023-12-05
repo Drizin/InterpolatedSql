@@ -239,6 +239,17 @@ namespace InterpolatedSql.Tests
                     IsAnsi = false,
                     IsFixedLength = true
                 },
+
+				// Known 'string format' for non-string type
+                new
+                {
+                    StringSql = (FormattableString)$"INSERT INTO [Table] (col1) VALUES ({new XElement( "Properties", new XAttribute( "value", 1 ) ):ntext});",
+                    ListSql = (FormattableString)$"SELECT col1 FROM [Table] WHERE col1 IN {new [] { new XElement( "Properties", new XAttribute( "value", 1 ) ), new XElement( "Properties", new XAttribute( "value", 2) ) }:ntext};",
+                    Value = new [] { new XElement( "Properties", new XAttribute( "value", 1 ) ).ToString(), new XElement( "Properties", new XAttribute( "value", 2 ) ).ToString() },
+                    Length = (int?)int.MaxValue,
+                    IsAnsi = false,
+                    IsFixedLength = true
+                }
             };
 
 			// Math.Max(StringParameterInfo.DefaultLength, "string".Length)

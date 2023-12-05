@@ -32,34 +32,14 @@ namespace InterpolatedSql
         protected static readonly Regex _lineBreaksRegex = new Regex(@"(\r\n|\n|\r)", RegexOptions.Compiled);
 
         /// <summary>
-        /// String(maxlength) / nvarchar(maxlength) / String / nvarchar
+        /// String(maxlength) / nvarchar(maxlength) / String / nvarchar: IsAnsi = false, IsFixedLength = false, Length = maxlength ?? Math.Max(StringParameterInfo.DefaultLength, Parameter.Length)
+        /// StringFixedLength(length) / nchar(length) / StringFixedLength / nchar: IsAnsi = false, IsFixedLength = true, Length = length ?? Parameter.Length
+        /// AnsiString(maxlength) / varchar(maxlength) / AnsiString / varchar: IsAnsi = true, IsFixedLength = false, Length = maxlength ?? Math.Max(StringParameterInfo.DefaultLength, Parameter.Length)
+        /// AnsiStringFixedLength(length) / char(length) / AnsiStringFixedLength / char: IsAnsi = true, IsFixedLength = true, Length = length ?? Parameter.Length
+        /// text / varchar(MAX) / varchar(-1): IsAnsi = true, IsFixedLength = true, Length = int.MaxValue
+        /// ntext / nvarchar(MAX) / nvarchar(-1): IsAnsi = false, IsFixedLength = true, Length = int.MaxValue
         /// </summary>
-        protected static readonly Regex regexDbTypeString = new Regex("^(String|nvarchar)\\s*(\\(\\s*(?<maxlength>\\d*)\\s*\\))?$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant | RegexOptions.Compiled);
-
-        /// <summary>
-        /// StringFixedLength(length) / nchar(length) / StringFixedLength / nchar
-        /// </summary>
-        protected static readonly Regex regexDbTypeStringFixedLength = new Regex("^(StringFixedLength|nchar)\\s*(\\(\\s*(?<length>\\d*)\\s*\\))?$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant | RegexOptions.Compiled);
-
-        /// <summary>
-        /// AnsiString(maxlength) / varchar(maxlength) / AnsiString / varchar
-        /// </summary>
-        protected static readonly Regex regexDbTypeAnsiString = new Regex("^(AnsiString|varchar)\\s*(\\(\\s*(?<maxlength>\\d*)\\s*\\))?$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant | RegexOptions.Compiled);
-
-        /// <summary>
-        /// AnsiStringFixedLength(length) / char(length) / AnsiStringFixedLength / char
-        /// </summary>
-        protected static readonly Regex regexDbTypeAnsiStringFixedLength = new Regex("^(AnsiStringFixedLength|char)\\s*(\\(\\s*(?<length>\\d*)\\s*\\))?$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant | RegexOptions.Compiled);
-
-        /// <summary>
-        /// text / varchar(MAX) / varchar(-1)
-        /// </summary>
-        protected static readonly Regex regexDbTypeText = new Regex("^(text|varchar\\s*(\\(\\s*((MAX|-1))\\s*\\)))$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant | RegexOptions.Compiled);
-
-        /// <summary>
-        /// ntext / nvarchar(MAX) / nvarchar(-1)
-        /// </summary>
-        protected static readonly Regex regexDbTypeNText = new Regex("^(ntext|nvarchar\\s*(\\(\\s*((MAX|-1))\\s*\\)))$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+        protected static readonly Regex regexDbType = new Regex(@"^(?<dbtype>AnsiStringFixedLength|StringFixedLength|AnsiString|String|ntext|text|nvarchar|nchar|varchar|char)\s*(\(\s*(?<maxlength>(MAX|-1|\d*))\s*\))?$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
         #endregion
 
@@ -241,122 +221,88 @@ namespace InterpolatedSql
             var direction = ParameterDirection.Input;
             DbType? dbType = null;
             DbType parsedDbType;
-            Match m;
+			
+			var defaultLengthTypes = new [] { "String", "AnsiString", "nvarchar", "varchar" };
+			var ansiTypes = new [] { "AnsiString", "AnsiStringFixedLength", "varchar", "char", "text" };
+			var fixedLengthTypes = new [] { "StringFixedLength", "nchar", "AnsiStringFixedLength", "char", "text", "ntext" };
+			
+			var textTypes = new[] { "text", "ntext" };
+			var maxLengthTypes = new[] { "varchar", "nvarchar" };
+			var maxLengthTypeLengths = new [] { "MAX", "-1" };
+
+            static (int Length, string Value) getArgumentInfo(object argValue, bool isMaxStringLength, bool isFixedLength, string? maxLengthString = null)
+            {
+                var value = argValue is string v ? v : argValue.ToString();
+                int length;
+
+				if (isMaxStringLength)
+				{
+					length = int.MaxValue;
+				}
+				else if ( maxLengthString != null )
+				{
+					length = int.Parse(maxLengthString);
+				}
+				else if (isFixedLength)
+				{
+					length = value.Length;
+				}
+                else
+                {
+                    length = Math.Max(StringParameterInfo.DefaultLength, value.Length);
+                }
+
+                return (length, value);
+            }
 
             // If argument is a string or IEnumerable<string> and argumentFormat is like "nvarchar(10)" we wrap the string under StringParameterInfo which brings additional info
             foreach (var testedFormat in argFormats.ToList())
             {
                 bool matched = true;
-                if (argumentValue is string && (m = regexDbTypeString.Match(testedFormat)) != null && m.Success) // String(maxlength) / nvarchar(maxlength) / String / nvarchar
-                    argumentValue =
-                        new StringParameterInfo()
+
+				Match match;
+
+				if ( argumentValue != null && ( match = regexDbType.Match(testedFormat) ).Success )
+				{
+					var dbTypeString = match.Groups["dbtype"].Value;
+					var maxLengthString = match.Groups["maxlength"].Success ? match.Groups["maxlength"].Value : null;
+
+					var isMaxStringLength = 
+						textTypes.Contains( dbTypeString, StringComparer.OrdinalIgnoreCase ) ||
+						( maxLengthTypes.Contains(dbTypeString, StringComparer.OrdinalIgnoreCase) && maxLengthTypeLengths.Contains(maxLengthString, StringComparer.OrdinalIgnoreCase) );
+
+					var isAnsi = ansiTypes.Contains( dbTypeString, StringComparer.OrdinalIgnoreCase );
+					var isFixedLength = isMaxStringLength || fixedLengthTypes.Contains( dbTypeString, StringComparer.OrdinalIgnoreCase );
+
+					if ( argumentValue is IEnumerable<object> enumerable )
+					{
+						argumentValue = enumerable.Select( arg => {
+                            var (length, value) = getArgumentInfo(arg, isMaxStringLength, isFixedLength, maxLengthString);
+
+                            return new StringParameterInfo()
+							{
+								IsAnsi = isAnsi,
+								IsFixedLength = isFixedLength,
+								Value = value,
+								Length = length
+							};
+						});
+					}
+					else
+					{
+						var (length, value) = getArgumentInfo( argumentValue, isMaxStringLength, isFixedLength, maxLengthString );
+
+                        argumentValue = new StringParameterInfo()
                         {
-                            IsAnsi = false,
-                            IsFixedLength = false,
-                            Value = (string)argumentValue,
-                            Length = (string.IsNullOrEmpty(m.Groups["maxlength"].Value) ? Math.Max(StringParameterInfo.DefaultLength, ((string)argumentValue).Length) : int.Parse(m.Groups["maxlength"].Value)),
+                            IsAnsi = isAnsi,
+                            IsFixedLength = isFixedLength,
+                            Value = value,
+                            Length = length
                         };
+					}
+                }
 
-                else if (argumentValue is string && (m = regexDbTypeAnsiString.Match(testedFormat)) != null && m.Success) // AnsiString(maxlength) / varchar(maxlength) / AnsiString / varchar
-                    argumentValue = new StringParameterInfo()
-                    {
-                        IsAnsi = true,
-                        IsFixedLength = false,
-                        Value = (string)argumentValue,
-                        Length = (string.IsNullOrEmpty(m.Groups["maxlength"].Value) ? Math.Max(StringParameterInfo.DefaultLength, ((string)argumentValue).Length) : int.Parse(m.Groups["maxlength"].Value))
-                    };
-
-                else if (argumentValue is string && (m = regexDbTypeStringFixedLength.Match(testedFormat)) != null && m.Success) // StringFixedLength(length) / nchar(length) / StringFixedLength / nchar
-                    argumentValue = new StringParameterInfo()
-                    {
-                        IsAnsi = false,
-                        IsFixedLength = true,
-                        Value = (string)argumentValue,
-                        Length = (string.IsNullOrEmpty(m.Groups["length"].Value) ? ((string)argumentValue).Length : int.Parse(m.Groups["length"].Value))
-                    };
-
-                else if (argumentValue is string && (m = regexDbTypeAnsiStringFixedLength.Match(testedFormat)) != null && m.Success) // AnsiStringFixedLength(length) / char(length) / AnsiStringFixedLength / char
-                    argumentValue = new StringParameterInfo()
-                    {
-                        IsAnsi = true,
-                        IsFixedLength = true,
-                        Value = (string)argumentValue,
-                        Length = (string.IsNullOrEmpty(m.Groups["length"].Value) ? ((string)argumentValue).Length : int.Parse(m.Groups["length"].Value))
-                    };
-
-                else if (argumentValue is string && (m = regexDbTypeText.Match(testedFormat)) != null && m.Success) // text / varchar(MAX) / varchar(-1)
-                    argumentValue = new StringParameterInfo()
-                    {
-                        IsAnsi = true,
-                        IsFixedLength = true,
-                        Value = (string)argumentValue,
-                        Length = int.MaxValue
-                    };
-
-                else if (argumentValue is string && (m = regexDbTypeNText.Match(testedFormat)) != null && m.Success) // ntext / nvarchar(MAX) / nvarchar(-1)
-                    argumentValue = new StringParameterInfo()
-                    {
-                        IsAnsi = false,
-                        IsFixedLength = true,
-                        Value = (string)argumentValue,
-                        Length = int.MaxValue
-                    };
-
-                else if (argumentValue is IEnumerable<string> && (m = regexDbTypeString.Match(testedFormat)) != null && m.Success) // String(maxlength) / nvarchar(maxlength) / String / nvarchar
-                    argumentValue = ((IEnumerable<string>)argumentValue).Select(str => new StringParameterInfo()
-                    {
-                        IsAnsi = false,
-                        IsFixedLength = false,
-                        Value = str,
-                        Length = (string.IsNullOrEmpty(m.Groups["maxlength"].Value) ? Math.Max(StringParameterInfo.DefaultLength, ((string)str).Length) : int.Parse(m.Groups["maxlength"].Value))
-                    });
-
-                else if (argumentValue is IEnumerable<string> && (m = regexDbTypeAnsiString.Match(testedFormat)) != null && m.Success) // AnsiString(maxlength) / varchar(maxlength) / AnsiString / varchar
-                    argumentValue = ((IEnumerable<string>)argumentValue).Select(str => new StringParameterInfo()
-                    {
-                        IsAnsi = true,
-                        IsFixedLength = false,
-                        Value = str,
-                        Length = (string.IsNullOrEmpty(m.Groups["maxlength"].Value) ? Math.Max(StringParameterInfo.DefaultLength, ((string)str).Length) : int.Parse(m.Groups["maxlength"].Value))
-                    });
-
-                else if (argumentValue is IEnumerable<string> && (m = regexDbTypeStringFixedLength.Match(testedFormat)) != null && m.Success) // StringFixedLength(length) / nchar(length) / StringFixedLength / nchar
-                    argumentValue = ((IEnumerable<string>)argumentValue).Select(str => new StringParameterInfo()
-                    {
-                        IsAnsi = false,
-                        IsFixedLength = true,
-                        Value = str,
-                        Length = (string.IsNullOrEmpty(m.Groups["length"].Value) ? ((string)str).Length : int.Parse(m.Groups["length"].Value))
-                    });
-
-                else if (argumentValue is IEnumerable<string> && (m = regexDbTypeAnsiStringFixedLength.Match(testedFormat)) != null && m.Success) // AnsiStringFixedLength(length) / char(length) / AnsiStringFixedLength / char
-                    argumentValue = ((IEnumerable<string>)argumentValue).Select(str => new StringParameterInfo()
-                    {
-                        IsAnsi = true,
-                        IsFixedLength = true,
-                        Value = str,
-                        Length = (string.IsNullOrEmpty(m.Groups["length"].Value) ? ((string)str).Length : int.Parse(m.Groups["length"].Value))
-                    });
-
-                else if (argumentValue is IEnumerable<string> && (m = regexDbTypeText.Match(testedFormat)) != null && m.Success) // text / varchar(MAX) / varchar(-1)
-                    argumentValue = ((IEnumerable<string>)argumentValue).Select(str => new StringParameterInfo()
-                    {
-                        IsAnsi = true,
-                        IsFixedLength = true,
-                        Value = str,
-                        Length = int.MaxValue
-                    });
-
-                else if (argumentValue is IEnumerable<string> && (m = regexDbTypeNText.Match(testedFormat)) != null && m.Success) // ntext / nvarchar(MAX) / nvarchar(-1)
-                    argumentValue = ((IEnumerable<string>)argumentValue).Select(str => new StringParameterInfo()
-                    {
-                        IsAnsi = false,
-                        IsFixedLength = true,
-                        Value = str,
-                        Length = int.MaxValue
-                    });
-
-                else if (dbType == null && Enum.TryParse<System.Data.DbType>(value: testedFormat, ignoreCase: true, result: out parsedDbType))
+                else if (dbType == null && Enum.TryParse(value: testedFormat, ignoreCase: true, result: out parsedDbType))
                 {
                     argumentValue = new DbTypeParameterInfo(null, argumentValue, direction, parsedDbType);
                 }
