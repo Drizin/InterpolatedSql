@@ -39,7 +39,7 @@ namespace InterpolatedSql
         /// text / varchar(MAX) / varchar(-1): IsAnsi = true, IsFixedLength = true, Length = int.MaxValue
         /// ntext / nvarchar(MAX) / nvarchar(-1): IsAnsi = false, IsFixedLength = true, Length = int.MaxValue
         /// </summary>
-        protected static readonly Regex regexDbType = new Regex(@"^(?<dbtype>AnsiStringFixedLength|StringFixedLength|AnsiString|String|ntext|text|nvarchar|nchar|varchar|char)\s*(\(\s*(?<maxlength>(MAX|-1|\d*))\s*\))?$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+        protected static readonly Regex regexStringDbType = new Regex(@"^(?<dbtype>AnsiStringFixedLength|StringFixedLength|AnsiString|String|ntext|text|nvarchar|nchar|varchar|char)\s*(\(\s*(?<maxlength>(MAX|-1|\d*))\s*\))?$", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
         #endregion
 
@@ -117,7 +117,7 @@ namespace InterpolatedSql
                     var currentLength = target.Format.Length;
                     ProcessArgument(target, argument, alignment, argumentFormat);
                     target.AutoSpacing = false; // Autospacing should be applied only to beginning of an interpolated block appended programatically
-                    currentIndex += (target.Format.Length -currentLength);
+                    currentIndex += (target.Format.Length - currentLength);
                 }
             }
             // Last literal
@@ -221,76 +221,53 @@ namespace InterpolatedSql
             var direction = ParameterDirection.Input;
             DbType? dbType = null;
             DbType parsedDbType;
-			
-			var defaultLengthTypes = new [] { "String", "AnsiString", "nvarchar", "varchar" };
-			var ansiTypes = new [] { "AnsiString", "AnsiStringFixedLength", "varchar", "char", "text" };
-			var fixedLengthTypes = new [] { "StringFixedLength", "nchar", "AnsiStringFixedLength", "char", "text", "ntext" };
-			
-			var textTypes = new[] { "text", "ntext" };
-			var maxLengthTypes = new[] { "varchar", "nvarchar" };
-			var maxLengthTypeLengths = new [] { "MAX", "-1" };
 
-            static (int Length, string Value) getArgumentInfo(object argValue, bool isMaxStringLength, bool isFixedLength, string? maxLengthString = null)
-            {
-                var value = argValue is string v ? v : argValue.ToString();
-                int length;
+            var defaultLengthTypes = new[] { "String", "AnsiString", "nvarchar", "varchar" };
+            var ansiTypes = new[] { "AnsiString", "AnsiStringFixedLength", "varchar", "char", "text" };
+            var fixedLengthTypes = new[] { "StringFixedLength", "nchar", "AnsiStringFixedLength", "char", "text", "ntext" };
 
-				if (isMaxStringLength)
-				{
-					length = int.MaxValue;
-				}
-				else if ( maxLengthString != null )
-				{
-					length = int.Parse(maxLengthString);
-				}
-				else if (isFixedLength)
-				{
-					length = value.Length;
-				}
-                else
-                {
-                    length = Math.Max(StringParameterInfo.DefaultLength, value.Length);
-                }
-
-                return (length, value);
-            }
+            var textTypes = new[] { "text", "ntext" };
+            var maxLengthTypes = new[] { "varchar", "nvarchar" };
+            var maxLengthTypeLengths = new[] { "MAX", "-1" };
 
             // If argument is a string or IEnumerable<string> and argumentFormat is like "nvarchar(10)" we wrap the string under StringParameterInfo which brings additional info
             foreach (var testedFormat in argFormats.ToList())
             {
                 bool matched = true;
 
-				Match match;
+                Match match = regexStringDbType.Match(testedFormat);
 
-				if ( argumentValue != null && ( match = regexDbType.Match(testedFormat) ).Success )
-				{
-					var dbTypeString = match.Groups["dbtype"].Value;
-					var maxLengthString = match.Groups["maxlength"].Success ? match.Groups["maxlength"].Value : null;
+                if (match.Success)
+                {
+                    var dbTypeString = match.Groups["dbtype"].Value;
+                    var maxLengthString = match.Groups["maxlength"].Success ? match.Groups["maxlength"].Value : null;
 
-					var isMaxStringLength = 
-						textTypes.Contains( dbTypeString, StringComparer.OrdinalIgnoreCase ) ||
-						( maxLengthTypes.Contains(dbTypeString, StringComparer.OrdinalIgnoreCase) && maxLengthTypeLengths.Contains(maxLengthString, StringComparer.OrdinalIgnoreCase) );
+                    var isMaxStringLength =
+                        textTypes.Contains(dbTypeString, StringComparer.OrdinalIgnoreCase) ||
+                        (maxLengthTypes.Contains(dbTypeString, StringComparer.OrdinalIgnoreCase) && maxLengthTypeLengths.Contains(maxLengthString, StringComparer.OrdinalIgnoreCase));
 
-					var isAnsi = ansiTypes.Contains( dbTypeString, StringComparer.OrdinalIgnoreCase );
-					var isFixedLength = isMaxStringLength || fixedLengthTypes.Contains( dbTypeString, StringComparer.OrdinalIgnoreCase );
+                    var isAnsi = ansiTypes.Contains(dbTypeString, StringComparer.OrdinalIgnoreCase);
+                    var isFixedLength = isMaxStringLength || fixedLengthTypes.Contains(dbTypeString, StringComparer.OrdinalIgnoreCase);
 
-					if ( argumentValue is IEnumerable<object> enumerable )
-					{
-						argumentValue = enumerable.Select( arg => {
-                            var (length, value) = getArgumentInfo(arg, isMaxStringLength, isFixedLength, maxLengthString);
+                    if (argumentValue is IEnumerable<object> enumerable)
+                    {
+                        argumentValue = enumerable.Select(arg => {
+                            var value = TransformStringArgument(arg);
+                            var length = GetStringLength(value, isMaxStringLength, isFixedLength, maxLengthString);
 
                             return new StringParameterInfo()
-							{
-								IsAnsi = isAnsi,
-								IsFixedLength = isFixedLength,
-								Value = value,
-								Length = length
-							};
-						});
-					}
-					else
-					{
-						var (length, value) = getArgumentInfo( argumentValue, isMaxStringLength, isFixedLength, maxLengthString );
+                            {
+                                IsAnsi = isAnsi,
+                                IsFixedLength = isFixedLength,
+                                Value = value,
+                                Length = length
+                            };
+                        });
+                    }
+                    else
+                    {
+                        var value = TransformStringArgument(argumentValue);
+                        var length = GetStringLength(value, isMaxStringLength, isFixedLength, maxLengthString);
 
                         argumentValue = new StringParameterInfo()
                         {
@@ -299,7 +276,7 @@ namespace InterpolatedSql
                             Value = value,
                             Length = length
                         };
-					}
+                    }
                 }
 
                 else if (dbType == null && Enum.TryParse(value: testedFormat, ignoreCase: true, result: out parsedDbType))
@@ -332,6 +309,24 @@ namespace InterpolatedSql
             if (!string.IsNullOrEmpty(argumentFormat))
                 argumentFormat = string.Join(",", argFormats);
         }
+
+        protected virtual string? TransformStringArgument(object? argValue)
+        {
+            return argValue is string v ? v : argValue?.ToString();
+        }
+
+        protected virtual int GetStringLength(string? value, bool isMaxStringLength, bool isFixedLength, string? maxLengthString = null)
+        {
+            if (isMaxStringLength)
+                return int.MaxValue;
+            else if (!string.IsNullOrEmpty(maxLengthString) && int.TryParse(maxLengthString, out var parsed))
+                return parsed;
+            else if (isFixedLength)
+                return value?.Length ?? 0;
+            else
+                return Math.Max(StringParameterInfo.DefaultLength, value?.Length ?? 0);
+        }
+
 
         /// <summary>
         /// Appends an interpolated argument.

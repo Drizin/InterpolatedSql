@@ -6,8 +6,11 @@
 
 #use soft tabs (spaces) for indentation
 indent_style = space
+indent_size = 4
+tab_width = 4
 
 #Formatting - new line options
+end_of_line = crlf
 
 #place catch statements on a new line
 csharp_new_line_before_catch = true
