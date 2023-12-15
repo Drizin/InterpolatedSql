@@ -3,7 +3,7 @@
 [![Nuget](https://img.shields.io/nuget/v/InterpolatedSql.StrongName?label=InterpolatedSql.StrongName)](https://www.nuget.org/packages/InterpolatedSql.StrongName)
 [![Downloads](https://img.shields.io/nuget/dt/InterpolatedSql.StrongName.svg)](https://www.nuget.org/packages/InterpolatedSql.StrongName)
 
-[![Nuget](https://img.shields.io/nuget/v/InterpolatedSql?label=InterpolatedSql.Dapper)](https://www.nuget.org/packages/InterpolatedSql.Dapper)
+[![Nuget](https://img.shields.io/nuget/v/InterpolatedSql.Dapper?label=InterpolatedSql.Dapper)](https://www.nuget.org/packages/InterpolatedSql.Dapper)
 [![Downloads](https://img.shields.io/nuget/dt/InterpolatedSql.Dapper.svg)](https://www.nuget.org/packages/InterpolatedSql.Dapper)
 [![Nuget](https://img.shields.io/nuget/v/InterpolatedSql.Dapper.StrongName?label=InterpolatedSql.Dapper.StrongName)](https://www.nuget.org/packages/InterpolatedSql.Dapper.StrongName)
 [![Downloads](https://img.shields.io/nuget/dt/InterpolatedSql.Dapper.StrongName.svg)](https://www.nuget.org/packages/InterpolatedSql.Dapper.StrongName)
