@@ -132,166 +132,134 @@ namespace InterpolatedSql.SqlBuilders
             else
                 combinedQuery = _combinedBuilderFactory2(Options, new StringBuilder(Format), SqlParameters.ToList());
 
+			void replaceKeywords(IInterpolatedSqlBuilderBase builder, (string Keyword, string? Literal)[] keywordInfo, string? noMatchLiteral = null)
+			{
+				if ( builder.IsEmpty ) return;
+				
+                bool foundMatch = false;
+				foreach ((string keyword, string? literal) in keywordInfo)
+				{
+					int matchPos;
+					while ((matchPos = combinedQuery.IndexOf(keyword)) != -1)
+					{
+						combinedQuery.Remove(matchPos, keyword.Length);
+						if ( !string.IsNullOrEmpty( literal ) )
+						{
+							combinedQuery.InsertLiteral(matchPos, literal);
+							matchPos += literal.Length;
+						}
+						combinedQuery.Insert(matchPos, builder.AsSql());
+						foundMatch = true;
+					}
+				}
+				
+				if ( !foundMatch && !string.IsNullOrEmpty( noMatchLiteral ) )
+				{
+					combinedQuery.AppendLiteral(noMatchLiteral);
+					combinedQuery.Append(builder.AsSql());
+				}
+			}
+
             _selects.TrimEnd();
             if (!_selects.IsEmpty)
             {
-                string matchKeyword;
-                int matchPos;
-                if (((matchKeyword = "/**select**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                    ((matchKeyword = "{select}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                {
-                    // Template has a Placeholder for SELECT
-                    combinedQuery.Remove(matchPos, matchKeyword.Length);
-                    combinedQuery.Insert(matchPos, _selects.AsSql());
-                    combinedQuery.InsertLiteral(matchPos, "SELECT ");
-                }
-                else if (((matchKeyword = "/**selects**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                        ((matchKeyword = "{selects}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                {
-                    // Template has a placeholder for SELECTS - which means that
-                    // SELECT should be already in template and user just wants to add more columns using "selects" placeholder
-                    combinedQuery.Remove(matchPos, matchKeyword.Length);
-                    combinedQuery.Insert(matchPos, _selects.AsSql());
-                    if (!_selects.ToString().StartsWith(", "))
-                        combinedQuery.InsertLiteral(matchPos, ", ");
-                }
+                var selectsLiteral = !_selects.ToString().StartsWith(", ") ? ", " : null;
+
+                replaceKeywords( 
+					_selects,
+					new (string Keyword, string? Literal)[]
+					{
+						// Template has a Placeholder for SELECT
+						("/**select**/", "SELECT "),
+						("{select}", "SELECT "),
+						// Template has a placeholder for SELECTS - which means that
+						// SELECT should be already in template and user just wants to add more columns using "selects" placeholder
+						("/**selects**/", selectsLiteral),
+						("{selects}", selectsLiteral)
+					}
+				);
             }
 
             _froms.TrimEnd();
             if (!_froms.IsEmpty)
             {
-                string matchKeyword;
-                int matchPos;
-                if (((matchKeyword = "/**from**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                    ((matchKeyword = "{from}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                {
-                    // Template has a Placeholder for FROMs
-                    combinedQuery.Remove(matchPos, matchKeyword.Length);
-                    combinedQuery.Insert(matchPos, _froms.AsSql());
-                    combinedQuery.InsertLiteral(matchPos, "FROM ");
-                }
-                else if (((matchKeyword = "/**joins**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                        ((matchKeyword = "{joins}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                {
-                    // Template has a placeholder for JOINS (yeah - JOINS and FROMS are currently using same variable)
-                    combinedQuery.Remove(matchPos, matchKeyword.Length);
-                    combinedQuery.Insert(matchPos, _froms.AsSql());
-                }
+				replaceKeywords( 
+					_froms,
+					new (string Keyword, string? Literal)[]
+					{
+						// Template has a Placeholder for FROMs
+						("/**from**/", "FROM "),
+						("{from}", "FROM "),
+						// Template has a placeholder for JOINS (yeah - JOINS and FROMS are currently using same variable)
+						("/**joins**/", null),
+						("{joins}", null)
+					}
+				);
             }
 
             if (_filters.Any())
             {
                 var filters = GetFilters()!;
 
-                string matchKeyword;
-                int matchPos;
-                if (((matchKeyword = "/**where**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                    ((matchKeyword = "{where}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                {
-                    // Template has a Placeholder for Filters
-                    combinedQuery.Remove(matchPos, matchKeyword.Length);
-                    combinedQuery.Insert(matchPos, filters.AsSql());
-                    combinedQuery.InsertLiteral(matchPos, "WHERE ");
-                }
-                else if (((matchKeyword = "/**filters**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                            ((matchKeyword = "{filters}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                {
-                    // Template has a Placeholder for Filters
-                    combinedQuery.Remove(matchPos, matchKeyword.Length);
-                    combinedQuery.Insert(matchPos, filters.AsSql());
-                    combinedQuery.InsertLiteral(matchPos, "AND ");
-                }
-                else
-                {
-                    //TODO: if Query Template was provided, check if Template ends with "WHERE" or "WHERE 1=1" or "WHERE 0=0", or "WHERE 1=1 AND", etc. remove all that and replace.
-                    // else...
-                    //TODO: if Query Template was provided, check if Template ends has WHERE with real conditions... set hasWhereConditions=true 
-                    // else...
-                    combinedQuery.AppendLiteral("WHERE ");
-                    combinedQuery.Append(filters.AsSql());
-                }
+				replaceKeywords( 
+					filters,
+					new (string Keyword, string? Literal)[]
+					{
+						// Template has a Placeholder for Filters
+						("/**where**/", "WHERE "),
+						("{where}", "WHERE "),							
+						("/**filters**/", "AND "),
+						("{filters}", "AND ")
+					},
+					//TODO: if Query Template was provided, check if Template ends with "WHERE" or "WHERE 1=1" or "WHERE 0=0", or "WHERE 1=1 AND", etc. remove all that and replace.
+					// else...
+					//TODO: if Query Template was provided, check if Template ends has WHERE with real conditions... set hasWhereConditions=true 
+					// else...
+					"WHERE "
+				);
             }
 
-            if (!_groupBy.IsEmpty)
-            {
-                string matchKeyword;
-                int matchPos;
-                if (((matchKeyword = "/**groupby**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                    ((matchKeyword = "{groupby}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                {
-                    // Template has a Placeholder for GROUP BY
-                    combinedQuery.Remove(matchPos, matchKeyword.Length);
-                    combinedQuery.Insert(matchPos, _groupBy.AsSql());
-                    combinedQuery.InsertLiteral(matchPos, "GROUP BY ");
-                }
-                else if (((matchKeyword = "/**groupby_additional**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                            ((matchKeyword = "{groupby_additional}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                {
-                    // Template has a Placeholder for "adding more columns to" GROUP BY
-                    combinedQuery.Remove(matchPos, matchKeyword.Length);
-                    combinedQuery.Insert(matchPos, _groupBy.AsSql());
-                    combinedQuery.InsertLiteral(matchPos, ", ");
-                }
-                else
-                {
-                    combinedQuery.AppendLiteral("GROUP BY ");
-                    combinedQuery.Append(_groupBy.AsSql());
-                }
-            }
+			replaceKeywords( 
+				_groupBy,
+				new (string Keyword, string? Literal)[]
+				{
+					// Template has a Placeholder for GROUP BY
+					("/**groupby**/", "GROUP BY "),
+					("{groupby}", "GROUP BY "),							
+					// Template has a Placeholder for "adding more columns to" GROUP BY
+					("/**groupby_additional**/", ", "),
+					("{groupby_additional}", ", ")
+				},
+				"GROUP BY "
+			);
 
-            if (!_having.IsEmpty)
-            {
-                string matchKeyword;
-                int matchPos;
-                if (((matchKeyword = "/**having**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                    ((matchKeyword = "{having}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                {
-                    // Template has a Placeholder for HAVING
-                    combinedQuery.Remove(matchPos, matchKeyword.Length);
-                    combinedQuery.Insert(matchPos, _having.AsSql());
-                    combinedQuery.InsertLiteral(matchPos, "HAVING ");
-                }
-                else if (((matchKeyword = "/**having_additional**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                            ((matchKeyword = "{having_additional}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                {
-                    // Template has a Placeholder for "adding more columns to" HAVING
-                    combinedQuery.Remove(matchPos, matchKeyword.Length);
-                    combinedQuery.Insert(matchPos, _having.AsSql());
-                    combinedQuery.InsertLiteral(matchPos, ", ");
-                }
-                else
-                {
-                    combinedQuery.AppendLiteral("HAVING ");
-                    combinedQuery.Append(_having.AsSql());
-                }
-            }
+			replaceKeywords( 
+				_having,
+				new (string Keyword, string? Literal)[]
+				{
+					// Template has a Placeholder for HAVING
+					("/**having**/", "HAVING "),
+					("{having}", "HAVING "),							
+					// Template has a Placeholder for "adding more columns to" HAVING
+					("/**having_additional**/", ", "),
+					("{having_additional}", ", ")
+				},
+				"HAVING "
+			);
 
-            if (!_orderBy.IsEmpty)
-            {
-                string matchKeyword;
-                int matchPos;
-                if (((matchKeyword = "/**orderby**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                    ((matchKeyword = "{orderby}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                {
-                    // Template has a Placeholder for ORDER BY
-                    combinedQuery.Remove(matchPos, matchKeyword.Length);
-                    combinedQuery.Insert(matchPos, _orderBy.AsSql());
-                    combinedQuery.InsertLiteral(matchPos, "ORDER BY ");
-                }
-                else if (((matchKeyword = "/**orderby_additional**/") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1) ||
-                            ((matchKeyword = "{orderby_additional}") != null && (matchPos = combinedQuery.IndexOf(matchKeyword)) != -1))
-                {
-                    // Template has a Placeholder for "adding more columns to" ORDER BY
-                    combinedQuery.Remove(matchPos, matchKeyword.Length);
-                    combinedQuery.Insert(matchPos, _orderBy.AsSql());
-                    combinedQuery.InsertLiteral(matchPos, ", ");
-                }
-                else
-                {
-                    combinedQuery.AppendLiteral("ORDER BY ");
-                    combinedQuery.Append(_orderBy.AsSql());
-                }
-            }
+			replaceKeywords( 
+				_having,
+				new (string Keyword, string? Literal)[]
+				{
+					// Template has a Placeholder for ORDER BY
+					("/**orderby**/", "ORDER BY "),
+					("{orderby}", "ORDER BY "),							
+					// Template has a Placeholder for "adding more columns to" ORDER BY
+					("/**orderby_additional**/", ", "),
+					("{orderby_additional}", ", ")
+				},
+				"ORDER BY "
+			);
 
             return combinedQuery.Build();
         }

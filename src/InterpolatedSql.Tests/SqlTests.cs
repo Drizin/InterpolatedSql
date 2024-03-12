@@ -56,6 +56,47 @@ namespace InterpolatedSql.Tests
             Assert.AreEqual(10, b.SqlParameters[1].Argument);
         }
  
- 
+         [Test]
+        public void TestMultipleFilterExtensions()
+        {
+            InterpolatedSqlBuilderOptions.DefaultOptions.ReuseIdenticalParameters = false;
+            var storageFolder = "_CALCENGINES";
+			var sqlTestNamePattern = "'%~_Test.%' ESCAPE '~'";
+            var regularNames = new[] { "Conduent_1_CE" };
+
+            var qb = new QueryBuilder(@$"
+				SELECT COUNT(*) TotalCount
+				FROM [File] f
+					INNER JOIN Folder fo ON f.Folder = fo.UID
+				WHERE fo.Name = {storageFolder:varchar(200)} AND f.Name NOT LIKE {sqlTestNamePattern:raw} AND f.Deleted != 1 /**filters**/
+
+				SELECT COUNT(*) TotalCount
+				FROM [File] f
+					INNER JOIN Folder fo ON f.Folder = fo.UID
+				WHERE fo.Name = {storageFolder:varchar(200)} AND f.Name NOT LIKE {sqlTestNamePattern:raw} AND f.Deleted != 1 /**filters**/
+			");
+
+			var filters = new Filters(Filters.FiltersType.AND)
+            {
+                new Filter($"f.Name IN {regularNames:varchar(200)}")
+            };
+
+            qb.Where(filters);
+
+            var sql = qb.Build();
+
+            Assert.AreEqual(@"
+				SELECT COUNT(*) TotalCount
+				FROM [File] f
+					INNER JOIN Folder fo ON f.Folder = fo.UID
+				WHERE fo.Name = @p0 AND f.Name NOT LIKE '%~_Test.%' ESCAPE '~' AND f.Deleted != 1 AND f.Name IN @p2
+
+				SELECT COUNT(*) TotalCount
+				FROM [File] f
+					INNER JOIN Folder fo ON f.Folder = fo.UID
+				WHERE fo.Name = @p1 AND f.Name NOT LIKE '%~_Test.%' ESCAPE '~' AND f.Deleted != 1 AND f.Name IN @p3
+			", sql.Sql);
+        }
+
     }
 }
