@@ -29,5 +29,33 @@ namespace InterpolatedSql.Tests
             Assert.AreEqual("INSERT INTO [Table] (col1, col2) VALUES (@p0, @p0);", s4.Sql);
             Assert.AreEqual("INSERT INTO [Table] (col1, col2) VALUES (@p0, @p0);", s5.Sql);
         }
+
+        [Test]
+        public void Test2()
+        {
+            var qb = new QueryBuilder(@$"
+	            SELECT COUNT(*) TotalCount 
+	            FROM [File] f 
+		            INNER JOIN Folder fo ON f.Folder = fo.UID 
+	            WHERE f.Deleted != 1 /**filters**/
+            ");
+
+            qb.Where($"Price>{1}");
+            qb.Where($"Price<{10}");
+
+            var b = qb.Build();
+            System.Diagnostics.Debug.Write(b.Sql);
+            Assert.AreEqual(@$"
+	            SELECT COUNT(*) TotalCount 
+	            FROM [File] f 
+		            INNER JOIN Folder fo ON f.Folder = fo.UID 
+	            WHERE f.Deleted != 1 AND Price>@p0 AND Price<@p1
+            ", b.Sql);
+            Assert.AreEqual(2, b.SqlParameters.Count);
+            Assert.AreEqual(1, b.SqlParameters[0].Argument);
+            Assert.AreEqual(10, b.SqlParameters[1].Argument);
+        }
+ 
+ 
     }
 }

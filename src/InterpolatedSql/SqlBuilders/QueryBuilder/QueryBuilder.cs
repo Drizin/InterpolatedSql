@@ -28,13 +28,6 @@ namespace InterpolatedSql.SqlBuilders
             DbConnection = connection;
         }
 
-        /// <inheritdoc />
-        public override IInterpolatedSql Build()
-        {
-            return AsSql();
-        }
-
-
     }
 
 }
