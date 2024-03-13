@@ -217,7 +217,7 @@ namespace InterpolatedSql
         /// </summary>
         protected virtual void TransformArgument(ref object? argumentValue, ref int argumentAlignment, ref string? argumentFormat)
         {
-            var argFormats = argumentFormat?.Split(new char[] { ',', '|' }, StringSplitOptions.RemoveEmptyEntries).Select(f => f.Trim()).ToList() ?? new List<string>();
+            var argFormats = argumentFormat?.Split(new char[] { ',', '|', ':' }, StringSplitOptions.RemoveEmptyEntries).Select(f => f.Trim()) ?? Array.Empty<string>();
             var direction = ParameterDirection.Input;
             DbType? dbType = null;
             DbType parsedDbType;
@@ -230,8 +230,10 @@ namespace InterpolatedSql
             var maxLengthTypes = new[] { "varchar", "nvarchar" };
             var maxLengthTypeLengths = new[] { "MAX", "-1" };
 
-            // If argument is a string or IEnumerable<string> and argumentFormat is like "nvarchar(10)" we wrap the string under StringParameterInfo which brings additional info
-            foreach (var testedFormat in argFormats.ToList())
+            var formatsToRemove = new List<string>();
+
+            // If argument is a string or IEnumerable<string> and testedFormat is like "nvarchar(10)" we wrap the string under StringParameterInfo which brings additional info
+            foreach (var testedFormat in argFormats)
             {
                 bool matched = true;
 
@@ -298,7 +300,7 @@ namespace InterpolatedSql
 
                 if (matched)
                 {
-                    argFormats.RemoveAll(a => a == testedFormat);
+					formatsToRemove.Add(testedFormat);
                 }
 
                 //TODO: parse SqlDbTypes?
@@ -307,7 +309,7 @@ namespace InterpolatedSql
             }
 
             if (!string.IsNullOrEmpty(argumentFormat))
-                argumentFormat = string.Join(",", argFormats);
+                argumentFormat = string.Join(",", argFormats.Where( f => !formatsToRemove.Contains(f) ));
         }
 
         protected virtual string? TransformStringArgument(object? argValue)
