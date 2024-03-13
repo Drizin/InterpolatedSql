@@ -2,6 +2,7 @@
 using System.Data;
 using System;
 using InterpolatedSql.Dapper.SqlBuilders;
+using System.Linq;
 
 namespace InterpolatedSql.Dapper.Tests
 {
@@ -124,7 +125,7 @@ namespace InterpolatedSql.Dapper.Tests
                 //    pos.ToString();
                 
                 // But if we want to give explicit names:
-                return parameter.Format! + (base.IsEnumerable(parameter.Argument) ? options.ParameterArrayNameSuffix : "");
+                return parameter.Format!.Split( ':' )[ 0 ] + (base.IsEnumerable(parameter.Argument) ? options.ParameterArrayNameSuffix : "");
             }
         }
 
@@ -143,6 +144,17 @@ namespace InterpolatedSql.Dapper.Tests
 
             var query = cn.QueryBuilder($"Select * from Users Where ModifiedDate >= {asOfDate:asOfDate}").Build();
             Assert.AreEqual("Select * from Users Where ModifiedDate >= @asOfDate", query.Sql);
+
+            var name = "John";
+            query = cn.QueryBuilder($"Select * from Users Where Name = {name:userName:varchar(200)}").Build();
+            Assert.AreEqual("Select * from Users Where Name = @userName", query.Sql);
+            var parameterInfo = (query.SqlParameters[0].Argument as StringParameterInfo)!;
+
+            Assert.NotNull(parameterInfo, "Argument is not StringParameterInfo.");
+            Assert.AreEqual(name, parameterInfo.Value, "Parameter value mismatch.");
+            Assert.AreEqual(true, parameterInfo.IsAnsi, "IsAnsi mismatch.");
+            Assert.AreEqual(false, parameterInfo.IsFixedLength, "IsFixedLength mismatch.");
+            Assert.AreEqual(200, parameterInfo.Length, "Argument length mismatch.");
 
             InterpolatedSqlDapperOptions.InterpolatedSqlParameterParser = new SqlParameterMapper();
         }
