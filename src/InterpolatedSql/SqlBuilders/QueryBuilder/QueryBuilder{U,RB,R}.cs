@@ -132,42 +132,15 @@ namespace InterpolatedSql.SqlBuilders
             else
                 combinedQuery = _combinedBuilderFactory2(Options, new StringBuilder(Format), SqlParameters.ToList());
 
-			void replaceKeywords(IInterpolatedSqlBuilderBase builder, (string Keyword, string? Literal)[] keywordInfo, string? noMatchLiteral = null)
-			{
-				if ( builder.IsEmpty ) return;
-				
-                bool foundMatch = false;
-				foreach ((string keyword, string? literal) in keywordInfo)
-				{
-					int matchPos;
-					while ((matchPos = combinedQuery.IndexOf(keyword)) != -1)
-					{
-						combinedQuery.Remove(matchPos, keyword.Length);
-						if ( !string.IsNullOrEmpty( literal ) )
-						{
-							combinedQuery.InsertLiteral(matchPos, literal);
-							matchPos += literal.Length;
-						}
-						combinedQuery.Insert(matchPos, builder.AsSql());
-						foundMatch = true;
-					}
-				}
-				
-				if ( !foundMatch && !string.IsNullOrEmpty( noMatchLiteral ) )
-				{
-					combinedQuery.AppendLiteral(noMatchLiteral);
-					combinedQuery.Append(builder.AsSql());
-				}
-			}
-
-            _selects.TrimEnd();
+            _selects.TrimEnd(); //TODO: Trim in combined result, should not modify this source object
             if (!_selects.IsEmpty)
             {
                 var selectsLiteral = !_selects.ToString().StartsWith(", ") ? ", " : null;
 
-                replaceKeywords( 
+                ReplaceKeywords(
+                    combinedQuery,
 					_selects,
-					new (string Keyword, string? Literal)[]
+					new[]
 					{
 						// Template has a Placeholder for SELECT
 						("/**select**/", "SELECT "),
@@ -180,12 +153,13 @@ namespace InterpolatedSql.SqlBuilders
 				);
             }
 
-            _froms.TrimEnd();
+            _froms.TrimEnd(); //TODO: Trim in combined result, should not modify this source object
             if (!_froms.IsEmpty)
             {
-				replaceKeywords( 
-					_froms,
-					new (string Keyword, string? Literal)[]
+				ReplaceKeywords(
+                    combinedQuery,
+                    _froms,
+					new[]
 					{
 						// Template has a Placeholder for FROMs
 						("/**from**/", "FROM "),
@@ -201,9 +175,10 @@ namespace InterpolatedSql.SqlBuilders
             {
                 var filters = GetFilters()!;
 
-				replaceKeywords( 
-					filters,
-					new (string Keyword, string? Literal)[]
+				ReplaceKeywords(
+                    combinedQuery,
+                    filters,
+					new[]
 					{
 						// Template has a Placeholder for Filters
 						("/**where**/", "WHERE "),
@@ -219,9 +194,10 @@ namespace InterpolatedSql.SqlBuilders
 				);
             }
 
-			replaceKeywords( 
-				_groupBy,
-				new (string Keyword, string? Literal)[]
+			ReplaceKeywords(
+                combinedQuery,
+                _groupBy,
+				new[]
 				{
 					// Template has a Placeholder for GROUP BY
 					("/**groupby**/", "GROUP BY "),
@@ -233,9 +209,10 @@ namespace InterpolatedSql.SqlBuilders
 				"GROUP BY "
 			);
 
-			replaceKeywords( 
-				_having,
-				new (string Keyword, string? Literal)[]
+			ReplaceKeywords(
+                combinedQuery,
+                _having,
+				new[]
 				{
 					// Template has a Placeholder for HAVING
 					("/**having**/", "HAVING "),
@@ -247,9 +224,10 @@ namespace InterpolatedSql.SqlBuilders
 				"HAVING "
 			);
 
-			replaceKeywords( 
-				_having,
-				new (string Keyword, string? Literal)[]
+			ReplaceKeywords(
+                combinedQuery,
+                _orderBy,
+				new[]
 				{
 					// Template has a Placeholder for ORDER BY
 					("/**orderby**/", "ORDER BY "),
@@ -263,6 +241,37 @@ namespace InterpolatedSql.SqlBuilders
 
             return combinedQuery.Build();
         }
+
+        void ReplaceKeywords(RB combinedQuery, IInterpolatedSqlBuilderBase builder, (string, string)[] keywordInfo, string? noMatchLiteral = null)
+        {
+            if (builder.IsEmpty) return;
+
+            bool foundMatch = false;
+            foreach (var kw in keywordInfo)
+            {
+                string keyword = kw.Item1;
+                string? literal = kw.Item2;
+                int matchPos;
+                while ((matchPos = combinedQuery.IndexOf(keyword)) != -1)
+                {
+                    combinedQuery.Remove(matchPos, keyword.Length);
+                    if (!string.IsNullOrEmpty(literal))
+                    {
+                        combinedQuery.InsertLiteral(matchPos, literal);
+                        matchPos += literal.Length;
+                    }
+                    combinedQuery.Insert(matchPos, builder.AsSql());
+                    foundMatch = true;
+                }
+            }
+
+            if (!foundMatch && !string.IsNullOrEmpty(noMatchLiteral))
+            {
+                combinedQuery.AppendLiteral(noMatchLiteral);
+                combinedQuery.Append(builder.AsSql());
+            }
+        }
+
 
 #if NET6_0_OR_GREATER
         /// <summary>
