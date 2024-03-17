@@ -1,6 +1,6 @@
 # Advanced Notes
 
-Technical notes about the library design for advanced users.
+Technical notes about the library design. For contributors or experienced developers that need to extend the library behavior.
 
 ## About Generics
 
@@ -36,22 +36,33 @@ So basically the subclass automatically gets a lot of "Fluent" methods (method-c
 
 Example
 ```cs
+// InterpolatedSqlBuilderBase<U, R>
+// so U (underlying type) is MyCustomBuilder
+// and R (return type) is IInterpolatedSql
 public class MyCustomBuilder : InterpolatedSqlBuilderBase<MyCustomBuilder, IInterpolatedSql>
 {
     //...ctors, etc.
 
-    // Custom Method
-    MyCustomBuilder MyCustomFluentMethod(FormattableString value)
+    // Custom Methods
+    public MyCustomBuilder MyCustomFluentMethod(FormattableString value)
     { 
         // ...
         return this;
+    }
+
+    public IInterpolatedSql Build() // parent class defines/requires abstract R Build()
+    {
+        // AsSql() returns the underlying bags (stringbuilder and dictionary of parameters)
+        // But you can also write your own logic here
+        return base.AsSql();
     }
 }
 
 // Usage
 var myBuilder = new MyCustomBuilder();
 myBuilder
-    .Append($"...")         // this is defined in parent class InterpolatedSqlBuilderBase<U,R>, and will return type U
-    .MyCustomFluentMethod() // since previous call returned MyCustomBuilder, we can call our custom method
-    .Append($"...");        // and we can still call all other methods
+    .Append($"...")                     // this is defined in parent class InterpolatedSqlBuilderBase<U,R>, and will return type U (MyCustomBuilder)
+    .MyCustomFluentMethod($"something") // since previous call returned MyCustomBuilder, we can call our custom method
+    .Append($"...")                     // and we can still call all other methods inherited from base class
+    .Build()
 ```
