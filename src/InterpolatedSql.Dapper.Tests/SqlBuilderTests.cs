@@ -621,6 +621,45 @@ SELECT @fKey", query.Build().Sql);
                 Assert.AreEqual("@p0 @p1 @p2 @p3 @p4 @p5 @p6 @p7 @p8 @p9 @p10 @p11 @p12 @p13 @p14 @p15 @p16 @p17 @p18 @p19 @p20 @p21", qb.Build().Sql);
         }
 
+        [TestCase(null, null)]
+        [TestCase(2, null)]
+        [TestCase(null, 1)]
+        [TestCase(2, 1)]
+        public void TestAppendIf(int? categoryId, int? subCategoryId)
+        {
+            var query = cn.SqlBuilder($@"SELECT * FROM [table1] WHERE 1=1");
+            query.AppendIf(categoryId != null, $"AND [ProductCategoryID]={categoryId}");
+            query.AppendIf(subCategoryId != null, $"AND [ProductSubcategoryID]={subCategoryId}");
+
+            if (categoryId == null && subCategoryId == null)
+            {
+                Assert.AreEqual(@"SELECT * FROM [table1] WHERE 1=1", query.Build().Sql);
+                Assert.AreEqual(query.Build().DapperParameters.Count, 0);
+            }
+            if (categoryId != null && subCategoryId == null)
+            {
+                Assert.AreEqual(@"SELECT * FROM [table1] WHERE 1=1 AND [ProductCategoryID]=@p0", query.Build().Sql);
+                Assert.AreEqual(query.Build().DapperParameters.Count, 1);
+                Assert.AreEqual(query.Build().DapperParameters.Get<int>("p0"), 2);
+            }
+            if (categoryId == null && subCategoryId != null)
+            {
+                Assert.AreEqual(@"SELECT * FROM [table1] WHERE 1=1 AND [ProductSubcategoryID]=@p0", query.Build().Sql);
+                Assert.AreEqual(query.Build().DapperParameters.Count, 1);
+                Assert.AreEqual(query.Build().DapperParameters.Get<int>("p0"), 1);
+            }
+            if (categoryId != null && subCategoryId != null)
+            {
+                Assert.AreEqual(@"SELECT * FROM [table1] WHERE 1=1 AND [ProductCategoryID]=@p0 AND [ProductSubcategoryID]=@p1", query.Build().Sql);
+                Assert.AreEqual(query.Build().DapperParameters.Count, 2);
+                Assert.AreEqual(query.Build().DapperParameters.Get<int>("p0"), 2);
+                Assert.AreEqual(query.Build().DapperParameters.Get<int>("p1"), 1);
+            }
+            //TODO: AppendIf with Func<FormattableString> for cases like using LINQ/Arrays without having to test edge cases
+        }
+
+
+
         [Test]
         public void TestMultipleStatements()
         {

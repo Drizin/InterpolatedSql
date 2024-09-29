@@ -111,6 +111,16 @@ var cmd = query.Build();
 
 (If it wasn't for a single structure wrapping both the SQL text and the SQL Parameters, you would have to maintain and feed two independent objects - a StringBuilder and a parameters Dictionary).
 
+The `+=` operator is just a shortcut to invoke `Append(FormattableString)`. If you want to dynamically blocks according to some conditions you can either do your own `if` statements or you can use `AppendIf` method:
+
+```cs
+var query = new SqlBuilder($"SELECT * FROM Product WHERE 1=1")
+    .AppendIf(productName != null, $"AND Name LIKE {productName}")
+    .AppendIf(subCategoryId != null, $"AND ProductSubcategoryID = {subCategoryId}")
+var cmd = query.Build();
+```
+
+
 
 # How to Use
 
