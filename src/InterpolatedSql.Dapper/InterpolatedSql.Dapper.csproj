@@ -20,7 +20,7 @@
 		<PackageReadmeFile>NuGetReadMe.md</PackageReadmeFile>
 		<AssemblyName>InterpolatedSql.Dapper</AssemblyName>
 		<Nullable>enable</Nullable>
-		<LangVersion>8.0</LangVersion>
+		<LangVersion>9</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
