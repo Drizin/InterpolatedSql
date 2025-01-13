@@ -39,7 +39,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the first cell returned, as object.
         /// </summary>
-        public static object ExecuteScalar(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null)
+        public static object? ExecuteScalar(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null)
         {
             return command.DbConnection.ExecuteScalar(sql: command.Sql, param: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType);
         }
@@ -47,7 +47,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the first cell returned, as T.
         /// </summary>
-        public static T ExecuteScalar<T>(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
+        public static T? ExecuteScalar<T>(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
         {
             return command.DbConnection.ExecuteScalar<T>(new CommandDefinition(commandText: command.Sql, parameters: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, cancellationToken: cancellationToken));
         }
@@ -55,7 +55,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the first cell returned, as T.
         /// </summary>
-        public static Task<T> ExecuteScalarAsync<T>(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
+        public static Task<T?> ExecuteScalarAsync<T>(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
         {
             return command.DbConnection.ExecuteScalarAsync<T>(new CommandDefinition(commandText: command.Sql, parameters: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, cancellationToken: cancellationToken));
         }
@@ -63,7 +63,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the first cell returned, as object.
         /// </summary>
-        public static Task<object> ExecuteScalarAsync(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
+        public static Task<object?> ExecuteScalarAsync(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
         {
             return command.DbConnection.ExecuteScalarAsync(new CommandDefinition(commandText: command.Sql, parameters: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, cancellationToken: cancellationToken));
         }
@@ -111,7 +111,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the data typed as T.
         /// </summary>
-        public static T QueryFirstOrDefault<T>(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null)
+        public static T? QueryFirstOrDefault<T>(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null)
         {
             return command.DbConnection.QueryFirstOrDefault<T>(sql: command.Sql, param: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType);
         }
@@ -127,7 +127,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the data typed as T.
         /// </summary>
-        public static T QuerySingleOrDefault<T>(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null)
+        public static T? QuerySingleOrDefault<T>(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null)
         {
             return command.DbConnection.QuerySingleOrDefault<T>(sql: command.Sql, param: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType);
         }
@@ -153,7 +153,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the data typed as dynamic objects.
         /// </summary>
-        public static dynamic QueryFirstOrDefault(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null)
+        public static dynamic? QueryFirstOrDefault(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null)
         {
             return command.DbConnection.QueryFirstOrDefault(sql: command.Sql, param: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType);
         }
@@ -169,7 +169,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the data typed as dynamic objects.
         /// </summary>
-        public static dynamic QuerySingleOrDefault(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null)
+        public static dynamic? QuerySingleOrDefault(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null)
         {
             return command.DbConnection.QuerySingleOrDefault(sql: command.Sql, param: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType);
         }
@@ -195,7 +195,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the data typed as type.
         /// </summary>
-        public static object QueryFirstOrDefault(this IDapperSqlCommand command, Type type, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null)
+        public static object? QueryFirstOrDefault(this IDapperSqlCommand command, Type type, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null)
         {
             return command.DbConnection.QueryFirstOrDefault(type: type, sql: command.Sql, param: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType);
         }
@@ -211,7 +211,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the data typed as type.
         /// </summary>
-        public static object QuerySingleOrDefault(this IDapperSqlCommand command, Type type, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null)
+        public static object? QuerySingleOrDefault(this IDapperSqlCommand command, Type type, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null)
         {
             return command.DbConnection.QuerySingleOrDefault(type: type, sql: command.Sql, param: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType);
         }
@@ -237,7 +237,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the data typed as T.
         /// </summary>
-        public static Task<T> QueryFirstOrDefaultAsync<T>(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
+        public static Task<T?> QueryFirstOrDefaultAsync<T>(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
         {
             return command.DbConnection.QueryFirstOrDefaultAsync<T>(new CommandDefinition(commandText: command.Sql, parameters: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, cancellationToken: cancellationToken));
         }
@@ -253,7 +253,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the data typed as T.
         /// </summary>
-        public static Task<T> QuerySingleOrDefaultAsync<T>(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
+        public static Task<T?> QuerySingleOrDefaultAsync<T>(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
         {
             return command.DbConnection.QuerySingleOrDefaultAsync<T>(new CommandDefinition(commandText: command.Sql, parameters: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, cancellationToken: cancellationToken));
         }
@@ -279,7 +279,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the data typed as dynamic objects.
         /// </summary>
-        public static Task<dynamic> QueryFirstOrDefaultAsync(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
+        public static Task<dynamic?> QueryFirstOrDefaultAsync(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
         {
             return command.DbConnection.QueryFirstOrDefaultAsync(new CommandDefinition(commandText: command.Sql, parameters: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, cancellationToken: cancellationToken));
         }
@@ -295,7 +295,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the data typed as dynamic objects.
         /// </summary>
-        public static Task<dynamic> QuerySingleOrDefaultAsync(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
+        public static Task<dynamic?> QuerySingleOrDefaultAsync(this IDapperSqlCommand command, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
         {
             return command.DbConnection.QuerySingleOrDefaultAsync(new CommandDefinition(commandText: command.Sql, parameters: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, cancellationToken: cancellationToken));
         }
@@ -321,7 +321,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the data typed as type.
         /// </summary>
-        public static Task<object> QueryFirstOrDefaultAsync(this IDapperSqlCommand command, Type type, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
+        public static Task<object?> QueryFirstOrDefaultAsync(this IDapperSqlCommand command, Type type, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
         {
             return command.DbConnection.QueryFirstOrDefaultAsync(type: type, command: new CommandDefinition(commandText: command.Sql, parameters: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, cancellationToken: cancellationToken));
         }
@@ -337,7 +337,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Executes the query (using Dapper), returning the data typed as type.
         /// </summary>
-        public static Task<object> QuerySingleOrDefaultAsync(this IDapperSqlCommand command, Type type, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
+        public static Task<object?> QuerySingleOrDefaultAsync(this IDapperSqlCommand command, Type type, IDbTransaction? transaction = null, int? commandTimeout = null, CommandType? commandType = null, CancellationToken cancellationToken = default)
         {
             return command.DbConnection.QuerySingleOrDefaultAsync(type: type, command: new CommandDefinition(commandText: command.Sql, parameters: ParametersDictionary.LoadFrom(command), transaction: transaction, commandTimeout: commandTimeout, commandType: commandType, cancellationToken: cancellationToken));
         }
