@@ -7,6 +7,8 @@ using System.Linq;
 using InterpolatedSql;
 using InterpolatedSql.SqlBuilders;
 using System.Threading.Tasks;
+using InterpolatedSql.Tests;
+using Dapper;
 //using TestHelper = InterpolatedSql.Dapper.Tests.TestHelper;
 
 namespace InterpolatedSql.Dapper.Tests
@@ -840,7 +842,7 @@ select 'ok'
                 Assert.AreEqual(@"
 declare @v1 nvarchar(10)=@p0
 declare @v2 nvarchar(10)=@p0
-select 1 from tb where name in @parray1
+select 1 from tb where name in @p1array
 declare @v3 nvarchar(10)=@p0
 declare @v4 nvarchar(10)=@p0
 declare @v5 nvarchar(10)=@p0
@@ -866,14 +868,14 @@ select 'ok'
 ", query.Sql);
 
                 Assert.AreEqual(query.DapperParameters.Get<string>("p0"), v);
-                Assert.AreEqual(query.DapperParameters.Get<List<int>>("parray1"), numList);
+                Assert.AreEqual(query.DapperParameters.Get<List<int>>("p1array"), numList);
             }
             else
             {
                 Assert.AreEqual(@"
 declare @v1 nvarchar(10)=@p0
 declare @v2 nvarchar(10)=@p1
-select 1 from tb where name in @parray2
+select 1 from tb where name in @p2array
 declare @v3 nvarchar(10)=@p3
 declare @v4 nvarchar(10)=@p4
 declare @v5 nvarchar(10)=@p5
@@ -900,8 +902,70 @@ select 'ok'
 
                 Assert.AreEqual(query.DapperParameters.Get<string>("p0"), v);
                 Assert.AreEqual(query.DapperParameters.Get<string>("p1"), v);
-                Assert.AreEqual(query.DapperParameters.Get<List<int>>("parray2"), numList);
+                Assert.AreEqual(query.DapperParameters.Get<List<int>>("p2array"), numList);
             }
+        }
+
+        [Test]
+        public void DapperCollisionTest1()
+        {
+            //https://github.com/Drizin/InterpolatedSql/issues/18
+            cn = new UnitTestsDbConnection(cn);
+            string[] largeArray = new string[] { "table1", "table2", "table3", "table4", "table5", "table6", "table7", "table8", "table9", "table10", "table11" };
+            var query = cn.QueryBuilder($"select * from INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME IN {largeArray} OR COLUMN_NAME IN {largeArray}").Build();
+            query.Execute();
+
+            var dapperCommand = ((UnitTestsDbConnection)cn).PreviousCommands.Last();
+            if (InterpolatedSqlBuilderOptions.DefaultOptions.ReuseIdenticalParameters)
+            {
+                Assert.AreEqual("select * from INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME IN @p0array OR COLUMN_NAME IN @p0array", query.Sql);
+                Assert.AreEqual(1, query.SqlParameters.Count);
+
+                // Dapper expands each occurrence of array @p0array into 11 elements
+                Assert.AreEqual("select * from INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME IN (@p0array1,@p0array2,@p0array3,@p0array4,@p0array5,@p0array6,@p0array7,@p0array8,@p0array9,@p0array10,@p0array11) OR COLUMN_NAME IN (@p0array1,@p0array2,@p0array3,@p0array4,@p0array5,@p0array6,@p0array7,@p0array8,@p0array9,@p0array10,@p0array11)", dapperCommand.CommandText);
+                Assert.AreEqual(11, dapperCommand.Parameters.Count);
+            }
+            else
+            {
+                Assert.AreEqual("select * from INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME IN @p0array OR COLUMN_NAME IN @p1array", query.Sql);
+                Assert.AreEqual(2, query.SqlParameters.Count);
+
+                // Dapper expands each array (@p0array and @p1array) into 11 elements
+                Assert.AreEqual("select * from INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME IN (@p0array1,@p0array2,@p0array3,@p0array4,@p0array5,@p0array6,@p0array7,@p0array8,@p0array9,@p0array10,@p0array11) OR COLUMN_NAME IN (@p1array1,@p1array2,@p1array3,@p1array4,@p1array5,@p1array6,@p1array7,@p1array8,@p1array9,@p1array10,@p1array11)", dapperCommand.CommandText);
+                Assert.AreEqual(22, dapperCommand.Parameters.Count);
+            }
+        }
+
+        [Test]
+        public void DapperCollisionTest2()
+        {
+            if (InterpolatedSqlBuilderOptions.DefaultOptions.ReuseIdenticalParameters == true) return;
+
+            //https://github.com/Drizin/InterpolatedSql/issues/18
+            string[] test = new string[] { "test", "test2" };
+            FormattableString sql = @$"
+                select * from INFORMATION_SCHEMA.COLUMNS
+                where {1} = 0 
+                    or PlainText in {test} 
+                    or {1} = 0 or {1} = 0 or {1} = 0 or {1} = 0 or {1} = 0 or {1} = 0 or {1} = 0 or {1} = 0 or {1} = 0
+                    or PlainText in {test.Skip(2)}
+                ";
+            cn = new UnitTestsDbConnection(cn);
+            string[] largeArray = new string[] { "table1", "table2", "table3", "table4", "table5", "table6", "table7", "table8", "table9", "table10", "table11" };
+            var query = cn.QueryBuilder(sql).Build();
+            try { query.Execute(); } catch { }
+            var dapperCommand = ((UnitTestsDbConnection)cn).PreviousCommands.Last();
+            
+            string expected = @"
+                select * from INFORMATION_SCHEMA.COLUMNS
+                where @p0 = 0 
+                    or PlainText in (@p1array1,@p1array2) 
+                    or @p2 = 0 or @p3 = 0 or @p4 = 0 or @p5 = 0 or @p6 = 0 or @p7 = 0 or @p8 = 0 or @p9 = 0 or @p10 = 0
+                    or PlainText in (SELECT @p11array WHERE 1 = 0)
+                ";
+            Assert.AreEqual(expected, dapperCommand.CommandText);
+            Assert.AreEqual(13, dapperCommand.Parameters.Count); // 10 dummy scalars, 1 array expanded into 2 elements, 1 array with single null element
+            // Previously Dapper was rendering "PlainText in (@parray11,@parray12)  ... or PlainText in (SELECT @parray11 WHERE 1 = 0)"
         }
 
         [Test]
