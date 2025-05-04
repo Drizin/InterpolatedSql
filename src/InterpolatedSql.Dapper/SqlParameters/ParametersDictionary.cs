@@ -92,7 +92,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Get parameter value
         /// </summary>
-        public T Get<T>(string key) => (T)this[key].Value;
+        public T? Get<T>(string key) => (T?)this[key].Value;
 
         /// <summary>
         /// Parameter Names
@@ -115,7 +115,7 @@ namespace InterpolatedSql.Dapper
             // Update output and return parameters back
             foreach (var oparm in this.Values.Where(p => p.ParameterDirection != ParameterDirection.Input && p.ParameterDirection != null))
             {
-                oparm.Value = dapperParameters.Get<object>(oparm.Name);
+                oparm.Value = dapperParameters.Get<object>(oparm.Name!);
                 oparm.OutputCallback?.Invoke(oparm.Value);
             }
         }

@@ -21,7 +21,7 @@ namespace InterpolatedSql.SqlBuilders
         }
 
         /// <inheritdoc />
-        public SqlBuilder(InterpolatedSqlBuilderOptions options) : this(options: options, format: null, arguments: null)
+        public SqlBuilder(InterpolatedSqlBuilderOptions? options) : this(options: options, format: null, arguments: null)
         {
         }
 

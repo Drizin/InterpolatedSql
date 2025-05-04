@@ -17,7 +17,7 @@ namespace InterpolatedSql.Dapper
         public virtual B Create<B>(IDbConnection connection)
             where B : IDapperSqlBuilder
         {
-            var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection) });
+            var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection) })!;
             B builder = (B)ctor.Invoke(new object[] { connection });
             return builder;
         }
@@ -28,7 +28,7 @@ namespace InterpolatedSql.Dapper
         public virtual B Create<B>(IDbConnection connection, InterpolatedSqlBuilderOptions options)
             where B : IDapperSqlBuilder
         {
-            var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(InterpolatedSqlBuilderOptions) });
+            var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(InterpolatedSqlBuilderOptions) })!;
             B builder = (B)ctor.Invoke(new object[] { connection, options });
             return builder;
         }
@@ -48,7 +48,7 @@ namespace InterpolatedSql.Dapper
         public virtual B Create<B>(IDbConnection connection, FormattableString command)
             where B : IDapperSqlBuilder
         {
-            var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(FormattableString) });
+            var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(FormattableString) })!;
             B builder = (B)ctor.Invoke(new object[] { connection, command });
             return builder;
         }
@@ -59,8 +59,8 @@ namespace InterpolatedSql.Dapper
         public virtual B Create<B>(IDbConnection connection, FormattableString command, InterpolatedSqlBuilderOptions? options = null)
             where B : IDapperSqlBuilder
         {
-            var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(FormattableString), typeof(InterpolatedSqlBuilderOptions) });
-            B builder = (B)ctor.Invoke(new object[] { connection, command, options });
+            var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(FormattableString), typeof(InterpolatedSqlBuilderOptions) })!;
+            B builder = (B)ctor.Invoke(new object[] { connection, command, options! });
             return builder;
         }
 
@@ -71,7 +71,7 @@ namespace InterpolatedSql.Dapper
         public virtual B Create<B>(IDbConnection connection, int literalLength, int formattedCount)
             where B : IDapperSqlBuilder
         {
-            var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(int), typeof(int) });
+            var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(int), typeof(int) })!;
             B builder = (B)ctor.Invoke(new object[] { connection, literalLength, formattedCount });
             return builder;
         }
@@ -82,7 +82,7 @@ namespace InterpolatedSql.Dapper
         public virtual B Create<B>(IDbConnection connection, int literalLength, int formattedCount, InterpolatedSqlBuilderOptions? options = null)
             where B : IDapperSqlBuilder
         {
-            var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(int), typeof(int), typeof(InterpolatedSqlBuilderOptions) });
+            var ctor = typeof(B).GetConstructor(new Type[] { typeof(IDbConnection), typeof(int), typeof(int), typeof(InterpolatedSqlBuilderOptions) })!;
             B builder = (B)ctor.Invoke(new object?[] { connection, literalLength, formattedCount, options });
             return builder;
         }

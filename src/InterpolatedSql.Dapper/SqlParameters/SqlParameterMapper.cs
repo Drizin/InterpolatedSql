@@ -39,15 +39,15 @@ namespace InterpolatedSql.Dapper
         {
             //TODO: do implicit parameters have names here?!
             if (parameter is DbTypeParameterInfo dbParm)
-                target.Add(parameter.Name, parameter.Value, dbParm.DbType, parameter.ParameterDirection ?? ParameterDirection.Input, dbParm.Size);
+                target.Add(parameter.Name!, parameter.Value, dbParm.DbType, parameter.ParameterDirection ?? ParameterDirection.Input, dbParm.Size);
             else if (parameter is StringParameterInfo stringParm)
-                target.Add(parameter.Name, new DbString() { Value = (string?)stringParm.Value, IsAnsi = stringParm.IsAnsi, IsFixedLength = stringParm.IsFixedLength, Length = stringParm.Length });
+                target.Add(parameter.Name!, new DbString() { Value = (string?)stringParm.Value, IsAnsi = stringParm.IsAnsi, IsFixedLength = stringParm.IsFixedLength, Length = stringParm.Length });
             else if (parameter is SqlParameterInfo parm && parm.Value is IEnumerable<StringParameterInfo> stringParms)
             {
-                target.Add(parameter.Name, stringParms.Select(stringParm => new DbString() { Value = (string?)stringParm.Value, IsAnsi = stringParm.IsAnsi, IsFixedLength = stringParm.IsFixedLength, Length = stringParm.Length }));
+                target.Add(parameter.Name!, stringParms.Select(stringParm => new DbString() { Value = (string?)stringParm.Value, IsAnsi = stringParm.IsAnsi, IsFixedLength = stringParm.IsFixedLength, Length = stringParm.Length }));
             }
             else
-                target.Add(parameter.Name, parameter.Value);
+                target.Add(parameter.Name!, parameter.Value);
         }
 
         /// <summary>
