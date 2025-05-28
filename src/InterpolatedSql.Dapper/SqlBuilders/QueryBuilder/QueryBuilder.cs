@@ -1,4 +1,5 @@
-﻿using System;
+﻿using InterpolatedSql.SqlBuilders;
+using System;
 using System.Data;
 
 namespace InterpolatedSql.Dapper.SqlBuilders
@@ -14,6 +15,11 @@ namespace InterpolatedSql.Dapper.SqlBuilders
 
         /// <inheritdoc/>
         public QueryBuilder(IDbConnection connection, FormattableString query) : base(opts => new SqlBuilder(connection, opts), (opts, format, arguments) => new SqlBuilder(connection, opts, format, arguments), connection, query)
+        {
+        }
+
+        /// <inheritdoc/>
+        public QueryBuilder(IDbConnection connection, FormattableString query, InterpolatedSqlBuilderOptions? options = null) : base(_ => new SqlBuilder(connection, options), (_, format, arguments) => new SqlBuilder(connection, options, format, arguments), connection, query)
         {
         }
         #endregion
