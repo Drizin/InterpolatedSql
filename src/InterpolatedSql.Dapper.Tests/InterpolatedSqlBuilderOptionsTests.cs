@@ -14,4 +14,13 @@ public class InterpolatedSqlBuilderOptionsTests
         var sql = qb.Build().Sql;
         Assert.AreEqual(":p0 :p1", sql);
     }
+
+    [Test]
+    public void QueryBuilderWithOptions()
+    {
+        var cn = new SqlConnection();
+        var qb = cn.SqlBuilder<InterpolatedSql.Dapper.SqlBuilders.QueryBuilder>(new InterpolatedSqlBuilderOptions { DatabaseParameterSymbol = ":" }, $"{"A"} {1}");
+        var sql = qb.Build().Sql;
+        Assert.AreEqual(":p0 :p1", sql);
+    }
 }
