@@ -57,7 +57,7 @@ namespace InterpolatedSql.Dapper
         {
             if (command.InterpolatedSqlBuilder.Options.AutoAdjustMultilineString)
                 command.AdjustMultilineString();
-            return SqlBuilderFactory.Create<B>(cnn, command.InterpolatedSqlBuilder.AsFormattableString());
+            return SqlBuilderFactory.Create<B>(cnn, command.InterpolatedSqlBuilder.AsFormattableString(), options);
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace InterpolatedSql.Dapper
         {
             if (command.InterpolatedSqlBuilder.Options.AutoAdjustMultilineString)
                 command.AdjustMultilineString();
-            return new SqlBuilder(cnn, command.InterpolatedSqlBuilder.AsFormattableString());
+            return new SqlBuilder(cnn, command.InterpolatedSqlBuilder.AsFormattableString(), options);
         }
 
 #else
