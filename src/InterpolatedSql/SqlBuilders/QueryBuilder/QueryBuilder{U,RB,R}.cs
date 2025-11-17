@@ -283,17 +283,20 @@ namespace InterpolatedSql.SqlBuilders
             _froms.AppendLiteral(NewLine); //TODO: bool AutoLineBreaks
             return (U)(object)this;
         }
-#else
+#endif
         /// <summary>
         /// Adds a new join to the FROM clause.
         /// </summary>
-        public virtual U From(FormattableString fromString)
+        public virtual U From(FormattableString fromString
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             _froms.Append(fromString);
             _froms.AppendLiteral(NewLine); //TODO: bool AutoLineBreaks
             return (U)(object)this;
         }
-#endif
 
 #if NET6_0_OR_GREATER
         /// <summary>
@@ -306,18 +309,21 @@ namespace InterpolatedSql.SqlBuilders
             _selects.Append(value.InterpolatedSqlBuilder.AsSql());
             return (U)(object)this;
         }
-#else
+#endif
         /// <summary>
         /// Adds a new column to the SELECT clause.
         /// </summary>
-        public virtual U Select(FormattableString selectString)
+        public virtual U Select(FormattableString selectString
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             if (!_selects.IsEmpty)
                 _selects.AppendLiteral(", ");
             _selects.Append(selectString);
             return (U)(object)this;
         }
-#endif
 
 #if NET6_0_OR_GREATER
         /// <summary>
@@ -330,18 +336,21 @@ namespace InterpolatedSql.SqlBuilders
             _groupBy.Append(value.InterpolatedSqlBuilder.AsSql());
             return (U)(object)this;
         }
-#else
+#endif
         /// <summary>
         /// Adds a new column to the GROUP BY clause.
         /// </summary>
-        public virtual U GroupBy(FormattableString groupBy)
+        public virtual U GroupBy(FormattableString groupBy
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             if (!_groupBy.IsEmpty)
                 _groupBy.AppendLiteral(", ");
             _groupBy.Append(groupBy);
             return (U)(object)this;
         }
-#endif
 
 #if NET6_0_OR_GREATER
         /// <summary>
@@ -354,18 +363,21 @@ namespace InterpolatedSql.SqlBuilders
             _having.Append(value.InterpolatedSqlBuilder.AsSql());
             return (U)(object)this;
         }
-#else
+#endif
         /// <summary>
         /// Adds a new column to the HAVING clause.
         /// </summary>
-        public virtual U Having(FormattableString having)
+        public virtual U Having(FormattableString having
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             if (!_having.IsEmpty)
                 _having.AppendLiteral(", ");
             _having.Append(having);
             return (U)(object)this;
         }
-#endif
 
 
 #if NET6_0_OR_GREATER
@@ -379,18 +391,21 @@ namespace InterpolatedSql.SqlBuilders
             _orderBy.Append(value.InterpolatedSqlBuilder.AsSql());
             return (U)(object)this;
         }
-#else
+#endif
         /// <summary>
         /// Adds a new column to the ORDER BY clause.
         /// </summary>
-        public virtual U OrderBy(FormattableString orderBy)
+        public virtual U OrderBy(FormattableString orderBy
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             if (!_orderBy.IsEmpty)
                 _orderBy.AppendLiteral(", ");
             _orderBy.Append(orderBy);
             return (U)(object)this;
         }
-#endif
 
 
     }

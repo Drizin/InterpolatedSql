@@ -20,6 +20,13 @@ namespace InterpolatedSql.SqlBuilders
         U Having(ref InterpolatedSqlHandler selectString);
         U OrderBy(ref InterpolatedSqlHandler selectString);
         U Select(ref InterpolatedSqlHandler selectString);
+        
+        //Overloads to disambiguate with FormattableString overloads
+        U From(FormattableString fromString, object? dummy = null);
+        U GroupBy(FormattableString selectString, object? dummy = null);
+        U Having(FormattableString selectString, object? dummy = null);
+        U OrderBy(FormattableString selectString, object? dummy = null);
+        U Select(FormattableString selectString, object? dummy = null);
 #else
         U From(FormattableString fromString);
         U GroupBy(FormattableString selectString);

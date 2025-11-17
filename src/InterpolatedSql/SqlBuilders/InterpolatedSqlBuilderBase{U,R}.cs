@@ -92,28 +92,39 @@ namespace InterpolatedSql.SqlBuilders
             base.AppendLine(ref value);
             return (U)(object)this;
         }
-#else
+#endif
         /// <inheritdoc/>
-        public new U Append(FormattableString value)
+        public new U Append(FormattableString value
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             base.Append(value);
             return (U)(object)this;
         }
 
         /// <inheritdoc/>
-        public new U AppendIf(bool condition, FormattableString value)
+        public new U AppendIf(bool condition, FormattableString value
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             base.AppendIf(condition, value);
             return (U)(object)this;
         }
 
         /// <inheritdoc/>
-        public new U AppendLine(FormattableString value)
+        public new U AppendLine(FormattableString value
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             base.AppendLine(value);
             return (U)(object)this;
         }
-#endif
 
         /// <inheritdoc/>
         public new U AppendLiteral(string value)
@@ -282,22 +293,33 @@ namespace InterpolatedSql.SqlBuilders
         {
             AppendLine(ref value);
         }
-#else
-        void IInterpolatedSqlBuilderBase.Append(FormattableString value)
+#endif
+        void IInterpolatedSqlBuilderBase.Append(FormattableString value
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             Append(value);
         }
 
-        void IInterpolatedSqlBuilderBase.AppendIf(bool condition, FormattableString value)
+        void IInterpolatedSqlBuilderBase.AppendIf(bool condition, FormattableString value
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             AppendIf(condition, value);
         }
 
-        void IInterpolatedSqlBuilderBase.AppendLine(FormattableString value)
+        void IInterpolatedSqlBuilderBase.AppendLine(FormattableString value
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             AppendLine(value);
         }
-#endif
         #endregion
 
 

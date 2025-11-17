@@ -56,11 +56,15 @@ namespace InterpolatedSql.SqlBuilders
             SqlBuilder builder = new SqlBuilder(literalLength, formattedCount, options);
             return builder;
         }
-#else
+#endif
         /// <summary>
         /// Creates a new SqlBuilder
         /// </summary>
-        public virtual SqlBuilder Create(FormattableString value)
+        public virtual SqlBuilder Create(FormattableString value
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             var builder = new SqlBuilder(value);
             return builder;
@@ -69,13 +73,16 @@ namespace InterpolatedSql.SqlBuilders
         /// <summary>
         /// Creates a new SqlBuilder
         /// </summary>
-        public virtual SqlBuilder Create(InterpolatedSqlBuilderOptions options, FormattableString value)
+        public virtual SqlBuilder Create(InterpolatedSqlBuilderOptions options, FormattableString value
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             var builder = new SqlBuilder(value, options);
             return builder;
         }
 
-#endif
 
 
         /// <summary>

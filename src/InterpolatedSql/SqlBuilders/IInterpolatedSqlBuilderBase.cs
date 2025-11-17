@@ -63,6 +63,16 @@ namespace InterpolatedSql.SqlBuilders
 
         /// <inheritdoc cref="InterpolatedSqlBuilderBase{U, R}.AppendLine(ref InterpolatedSqlHandler)"/>
         void AppendLine([System.Runtime.CompilerServices.InterpolatedStringHandlerArgument("")] ref InterpolatedSqlHandler value);
+        #region Overloads to disambiguate with FormattableString overloads - NET6+ users will probably prefer the InterpolatedStringHandler overload, but sometimes will need this one (e.g. F# can't use InterpolatedStringHandler)
+        /// <inheritdoc cref="InterpolatedSqlBuilderBase{U, R}.Append(FormattableString, object)"/>
+        void Append(FormattableString value, object? dummy = null);
+
+        /// <inheritdoc cref="InterpolatedSqlBuilderBase{U, R}.AppendIf(bool, FormattableString, object)"/>
+        void AppendIf(bool condition, FormattableString value, object? dummy = null);
+
+        /// <inheritdoc cref="InterpolatedSqlBuilderBase{U, R}.AppendLine(FormattableString, object)"/>
+        void AppendLine(FormattableString value, object? dummy = null);
+        #endregion
 #else
         /// <inheritdoc cref="InterpolatedSqlBuilderBase{U, R}.Append(FormattableString)"/>
         void Append(FormattableString value);

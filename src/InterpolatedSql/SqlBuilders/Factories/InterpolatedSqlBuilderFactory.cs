@@ -100,12 +100,16 @@ namespace InterpolatedSql.SqlBuilders
             return value.InterpolatedSqlBuilder;
         }
 
-#else
+#endif
 
         /// <summary>
         /// Creates a new IInterpolatedSqlBuilder of type B
         /// </summary>
-        public virtual B Create(FormattableString value)
+        public virtual B Create(FormattableString value
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             B builder;
             var ctor = typeof(B).GetConstructor(new Type[] { typeof(FormattableString) });
@@ -132,7 +136,6 @@ namespace InterpolatedSql.SqlBuilders
             return builder;
         }
 
-#endif
 
 
         /// <summary>

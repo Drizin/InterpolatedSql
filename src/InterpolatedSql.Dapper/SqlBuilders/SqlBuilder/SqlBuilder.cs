@@ -11,7 +11,7 @@ namespace InterpolatedSql.Dapper.SqlBuilders
     {
         #region ctors
         /// <inheritdoc />
-        protected SqlBuilder(IDbConnection connection, InterpolatedSqlBuilderOptions? options, StringBuilder? format, List<InterpolatedSqlParameter>? arguments) : base(connection, options, format, arguments)
+        public SqlBuilder(IDbConnection connection, InterpolatedSqlBuilderOptions? options, StringBuilder? format, List<InterpolatedSqlParameter>? arguments) : base(connection, options, format, arguments)
         {
             DbConnection = connection;
         }

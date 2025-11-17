@@ -70,13 +70,16 @@ namespace InterpolatedSql.Dapper
                 command.AdjustMultilineString();
             return new SqlBuilder(cnn, command.InterpolatedSqlBuilder.AsFormattableString(), options);
         }
-
-#else
+#endif
         /// <summary>
         /// Creates a new IInterpolatedSqlBuilder of type B over current connection
         /// </summary>
         /// <param name="command">SQL command</param>
-        public static B SqlBuilder<B>(this IDbConnection cnn, FormattableString command)
+        public static B SqlBuilder<B>(this IDbConnection cnn, FormattableString command
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
             where B : IDapperSqlBuilder
         {
             return SqlBuilderFactory.Create<B>(cnn, command);
@@ -86,7 +89,11 @@ namespace InterpolatedSql.Dapper
         /// Creates a new SqlBuilder over current connection
         /// </summary>
         /// <param name="command">SQL command</param>
-        public static SqlBuilder SqlBuilder(this IDbConnection cnn, FormattableString command)
+        public static SqlBuilder SqlBuilder(this IDbConnection cnn, FormattableString command
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             return new SqlBuilder(cnn, command);
         }
@@ -95,7 +102,11 @@ namespace InterpolatedSql.Dapper
         /// Creates a new IInterpolatedSqlBuilder of type B over current connection
         /// </summary>
         /// <param name="command">SQL command</param>
-        public static B SqlBuilder<B>(this IDbConnection cnn, InterpolatedSqlBuilderOptions options, FormattableString command)
+        public static B SqlBuilder<B>(this IDbConnection cnn, InterpolatedSqlBuilderOptions options, FormattableString command
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
             where B : IDapperSqlBuilder
         {
             return SqlBuilderFactory.Create<B>(cnn, command, options);
@@ -105,11 +116,14 @@ namespace InterpolatedSql.Dapper
         /// Creates a new SqlBuilder over current connection
         /// </summary>
         /// <param name="command">SQL command</param>
-        public static SqlBuilder SqlBuilder(this IDbConnection cnn, InterpolatedSqlBuilderOptions options, FormattableString command)
+        public static SqlBuilder SqlBuilder(this IDbConnection cnn, InterpolatedSqlBuilderOptions options, FormattableString command
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             return new SqlBuilder(cnn, command, options);
         }
-#endif
 
         /// <summary>
         /// Creates a new empty SqlBuilder over current connection
@@ -121,16 +135,6 @@ namespace InterpolatedSql.Dapper
         #endregion
 
         #region QueryBuilder
-        /// <summary>
-        /// Creates a new QueryBuilder over current connection
-        /// </summary>
-        /// <param name="query">You can use "{where}" or "/**where**/" in your query, and it will be replaced by "WHERE + filters" (if any filter is defined). <br />
-        /// You can use "{filters}" or "/**filters**/" in your query, and it will be replaced by "filters" (without where) (if any filter is defined).
-        /// </param>
-        public static QueryBuilder QueryBuilder(this IDbConnection cnn, FormattableString query)
-        {
-            return new QueryBuilder(cnn, query);
-        }
 
         /// <summary>
         /// Creates a new empty QueryBuilder over current connection
@@ -138,6 +142,34 @@ namespace InterpolatedSql.Dapper
         public static QueryBuilder QueryBuilder(this IDbConnection cnn)
         {
             return new QueryBuilder(cnn);
+        }
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Creates a new QueryBuilder over current connection
+        /// </summary>
+        /// <param name="query">You can use "{where}" or "/**where**/" in your query, and it will be replaced by "WHERE + filters" (if any filter is defined). <br />
+        /// You can use "{filters}" or "/**filters**/" in your query, and it will be replaced by "filters" (without where) (if any filter is defined).
+        /// </param>
+        public static QueryBuilder QueryBuilder(this IDbConnection cnn, ref InterpolatedSqlHandler command)
+        {
+            if (command.InterpolatedSqlBuilder.Options.AutoAdjustMultilineString)
+                command.AdjustMultilineString();
+            return new QueryBuilder(cnn, command.InterpolatedSqlBuilder.AsFormattableString());
+        }
+#endif
+        /// <summary>
+        /// Creates a new QueryBuilder over current connection
+        /// </summary>
+        /// <param name="query">You can use "{where}" or "/**where**/" in your query, and it will be replaced by "WHERE + filters" (if any filter is defined). <br />
+        /// You can use "{filters}" or "/**filters**/" in your query, and it will be replaced by "filters" (without where) (if any filter is defined).
+        /// </param>
+        public static QueryBuilder QueryBuilder(this IDbConnection cnn, FormattableString query
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
+        {
+            return new QueryBuilder(cnn, query);
         }
         #endregion
     }

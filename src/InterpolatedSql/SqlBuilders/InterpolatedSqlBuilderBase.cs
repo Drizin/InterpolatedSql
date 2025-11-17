@@ -258,12 +258,16 @@ namespace InterpolatedSql.SqlBuilders
             AppendLine();
             Append(value.InterpolatedSqlBuilder.AsSql());
         }
-#else
+#endif
         /// <summary>
         /// Appends to this instance another InterpolatedString.
         /// Underlying parameters will be appended (merged), and underlying formats will be concatenated (placeholder positions will be shifted to their new positions).
         /// </summary>
-        public void Append(FormattableString value)
+        public void Append(FormattableString value
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             if (AutoSpacing && value.Format.Length > 0)
                 CheckAutoSpacing(value.Format[0]);
@@ -277,7 +281,11 @@ namespace InterpolatedSql.SqlBuilders
         /// Underlying parameters will be appended (merged), and underlying formats will be concatenated (placeholder positions will be shifted to their new positions).
         /// If condition is false, FormattableString won't be parsed or appended.
         /// </summary>
-        public void AppendIf(bool condition, FormattableString value)
+        public void AppendIf(bool condition, FormattableString value
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             if (!condition)
                 return;
@@ -293,12 +301,15 @@ namespace InterpolatedSql.SqlBuilders
         /// The idea is that in a single statement we can add a new line and isolate it from the PREVIOUS line
         /// (there's no point in having linebreaks at the END of a query)
         /// </summary>
-        public void AppendLine(FormattableString value)
+        public void AppendLine(FormattableString value
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             AppendLine();
             Insert(_format.Length, value);
         }
-#endif
 
 
         /// <summary>

@@ -12,6 +12,9 @@ namespace InterpolatedSql.SqlBuilders.InsertUpdateBuilder
 #if NET6_0_OR_GREATER
         U AddColumn(string columnName, ref InterpolatedSqlHandler value, bool includeInInsert = true, bool includeInUpdate = true);
         R GetUpdateSql(ref InterpolatedSqlHandler whereCondition);
+        //Overloads to disambiguate with FormattableString overloads
+        U AddColumn(string columnName, FormattableString value, bool includeInInsert = true, bool includeInUpdate = true, object? dummy = null);
+        R GetUpdateSql(FormattableString whereCondition, object? dummy = null);
 #else
         U AddColumn(string columnName, FormattableString value, bool includeInInsert = true, bool includeInUpdate = true);
         R GetUpdateSql(FormattableString whereCondition);

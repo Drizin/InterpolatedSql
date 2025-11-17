@@ -70,11 +70,15 @@ namespace InterpolatedSql.SqlBuilders.InsertUpdateBuilder
             });
             return (U)(object)this;
         }
-#else
+#endif
         /// <summary>
         /// Registers a column and the respective value
         /// </summary>
-        public U AddColumn(string columnName, FormattableString value, bool includeInInsert = true, bool includeInUpdate = true)
+        public U AddColumn(string columnName, FormattableString value, bool includeInInsert = true, bool includeInUpdate = true
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
+#endif
+            )
         {
             _columnValues.Add(new ColumnValue()
             {
@@ -85,7 +89,6 @@ namespace InterpolatedSql.SqlBuilders.InsertUpdateBuilder
             }); ;
             return (U)(object)this;
         }
-#endif
 
         /// <inheritdoc/>
         public virtual R GetInsertSql()
@@ -115,12 +118,41 @@ namespace InterpolatedSql.SqlBuilders.InsertUpdateBuilder
             return combinedQuery.Build();
         }
 
+#if NET6_0_OR_GREATER
+        /// <inheritdoc/>
+        public virtual R GetUpdateSql(ref InterpolatedSqlHandler whereCondition)
+        {
+            RB combinedQuery;
+            if (_combinedBuilderFactory == null)
+                return null!; // initializing
+
+            var cols = _columnValues.Where(x => x.IncludeInUpdate).ToList();
+            combinedQuery = _combinedBuilderFactory(InterpolatedSqlBuilderOptions.DefaultOptions);
+            combinedQuery.AppendLiteral("UPDATE " + _tableName + " SET ");
+            for (int i = 0; i < cols.Count(); i++)
+            {
+                if (i > 0)
+                    combinedQuery.AppendLiteral(", ");
+                combinedQuery.AppendLiteral(cols[i].ColumnName);
+                combinedQuery.AppendLiteral("=");
+                combinedQuery.Append(cols[i].Value);
+            }
+
+            if (whereCondition.InterpolatedSqlBuilder.Format.Length > 0 && !char.IsWhiteSpace(whereCondition.InterpolatedSqlBuilder.Format[0]))
+                combinedQuery.AppendLiteral(" ");
+            if (!whereCondition.InterpolatedSqlBuilder.Format.Trim().StartsWith("WHERE"))
+                combinedQuery.AppendLiteral("WHERE ");
+            combinedQuery.Append(whereCondition.InterpolatedSqlBuilder.AsSql());
+
+            return combinedQuery.Build();
+        }
+#endif
+
         /// <inheritdoc/>
         public virtual R GetUpdateSql(
-#if NET6_0_OR_GREATER
-            ref InterpolatedSqlHandler whereCondition
-#else
             FormattableString whereCondition
+#if NET6_0_OR_GREATER
+            , object? dummy = null // to differentiate from InterpolatedSqlHandler overload
 #endif
             )
         {
@@ -140,19 +172,11 @@ namespace InterpolatedSql.SqlBuilders.InsertUpdateBuilder
                 combinedQuery.Append(cols[i].Value);
             }
 
-#if NET6_0_OR_GREATER
-            if (whereCondition.InterpolatedSqlBuilder.Format.Length > 0 && !char.IsWhiteSpace(whereCondition.InterpolatedSqlBuilder.Format[0]))
-                combinedQuery.AppendLiteral(" ");
-            if (!whereCondition.InterpolatedSqlBuilder.Format.Trim().StartsWith("WHERE"))
-                combinedQuery.AppendLiteral("WHERE ");
-            combinedQuery.Append(whereCondition.InterpolatedSqlBuilder.AsSql());
-#else
             if (whereCondition.Format.Length > 0 && !char.IsWhiteSpace(whereCondition.Format[0]))
                 combinedQuery.AppendLiteral(" ");
             if (!whereCondition.Format.Trim().StartsWith("WHERE"))
                 combinedQuery.AppendLiteral("WHERE ");
             combinedQuery.Append(whereCondition);
-#endif
 
             return combinedQuery.Build();
         }
