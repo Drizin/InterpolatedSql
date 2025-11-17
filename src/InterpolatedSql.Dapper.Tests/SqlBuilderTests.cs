@@ -965,7 +965,7 @@ select 'ok'
                 ";
             Assert.AreEqual(expected, dapperCommand.CommandText);
             Assert.AreEqual(13, dapperCommand.Parameters.Count); // 10 dummy scalars, 1 array expanded into 2 elements, 1 array with single null element
-            // Previously Dapper was rendering "PlainText in (@parray11,@parray12)  ... or PlainText in (SELECT @parray11 WHERE 1 = 0)"
+            // Previously Dapper was rendering "PlainText in (@p11array,@12parray)  ... or PlainText in (SELECT @p11array WHERE 1 = 0)"
         }
 
         [Test]

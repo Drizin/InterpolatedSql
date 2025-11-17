@@ -335,19 +335,19 @@ HAVING COUNT(*)>@p0";
 FROM [Production].[Product]
 WHERE [ListPrice] <= @p0 AND [Weight] <= @p1 AND [Name] LIKE @p2) AND [SalesOrderId] IN (SELECT SalesOrderID
 FROM [Sales].[SalesOrderHeader]
-WHERE [CustomerId] = @p3 AND [Status] IN @parray4)";
+WHERE [CustomerId] = @p3 AND [Status] IN @p4array)";
 
             Assert.AreEqual(expected, finalQuery.Sql);
             Assert.That(finalQuery.DapperParameters.ParameterNames.Contains("p0"));
             Assert.That(finalQuery.DapperParameters.ParameterNames.Contains("p1"));
             Assert.That(finalQuery.DapperParameters.ParameterNames.Contains("p2"));
             Assert.That(finalQuery.DapperParameters.ParameterNames.Contains("p3"));
-            Assert.That(finalQuery.DapperParameters.ParameterNames.Contains("parray4"));
+            Assert.That(finalQuery.DapperParameters.ParameterNames.Contains("p4array"));
             Assert.AreEqual(finalQuery.DapperParameters.Get<int>("p0"), maxPrice);
             Assert.AreEqual(finalQuery.DapperParameters.Get<int>("p1"), maxWeight);
             Assert.AreEqual(finalQuery.DapperParameters.Get<string>("p2"), search);
             Assert.AreEqual(finalQuery.DapperParameters.Get<int>("p3"), customerId);
-            Assert.AreEqual(finalQuery.DapperParameters.Get<short[]>("parray4"), statuses);
+            Assert.AreEqual(finalQuery.DapperParameters.Get<short[]>("p4array"), statuses);
 
             var orderItems = finalQuery.Query();
 
