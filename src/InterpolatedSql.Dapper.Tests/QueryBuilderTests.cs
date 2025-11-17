@@ -48,6 +48,25 @@ ORDER BY ProductId
         }
 
         [Test]
+        public void TestWhereIf()
+        {
+            var q = cn.QueryBuilder($"SELECT * FROM Products /**where**/");
+            int? maxPrice = null;
+            q.WhereIf(maxPrice != null, $"MaxPrice > {maxPrice}");
+
+            var cmd = q.Build();
+            Assert.AreEqual("SELECT * FROM Products /**where**/", cmd.Sql);
+            Assert.That(cmd.DapperParameters.Count == 0);
+
+            maxPrice = 100;
+            q.WhereIf(maxPrice != null, $"MaxPrice > {maxPrice}");
+            cmd = q.Build();
+            Assert.AreEqual("SELECT * FROM Products WHERE MaxPrice > @p0", cmd.Sql);
+            Assert.That(cmd.DapperParameters.ParameterNames.Contains("p0"));
+            Assert.AreEqual(cmd.DapperParameters.Get<int>("p0"), maxPrice);
+        }
+
+        [Test]
         public void TestTemplateAPI()
         {
 

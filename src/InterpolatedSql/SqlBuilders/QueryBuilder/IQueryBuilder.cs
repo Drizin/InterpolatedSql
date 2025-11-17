@@ -14,6 +14,9 @@ namespace InterpolatedSql.SqlBuilders
         U Where(Filter filter);
         U Where(Filters filters);
         U Where(FormattableString filter);
+        U WhereIf(bool condition, Filter filter);
+        U WhereIf(bool condition, Filters filters);
+        U WhereIf(bool condition, FormattableString filter);
 #if NET6_0_OR_GREATER
         U From(ref InterpolatedSqlHandler fromString);
         U GroupBy(ref InterpolatedSqlHandler selectString);

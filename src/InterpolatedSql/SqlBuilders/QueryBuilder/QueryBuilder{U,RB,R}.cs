@@ -80,11 +80,31 @@ namespace InterpolatedSql.SqlBuilders
         }
 
         /// <summary>
+        /// Adds a new condition to where clauses, depending on a condition.
+        /// </summary>
+        public virtual U WhereIf(bool condition, Filter filter)
+        {
+            if (condition)
+                _filters.Add(filter);
+            return (U)(object)this;
+        }
+
+        /// <summary>
         /// Adds a new condition to where clauses.
         /// </summary>
         public virtual U Where(Filters filters)
         {
             _filters.Add(filters);
+            return (U)(object)this;
+        }
+
+        /// <summary>
+        /// Adds a new condition to where clauses, depending on a condition.
+        /// </summary>
+        public virtual U WhereIf(bool condition, Filters filters)
+        {
+            if (condition)
+                _filters.Add(filters);
             return (U)(object)this;
         }
 
@@ -96,6 +116,15 @@ namespace InterpolatedSql.SqlBuilders
         public virtual U Where(FormattableString filter)
         {
             return Where(new Filter(filter));
+        }
+
+        /// <summary>
+        /// Adds a new condition to where clauses, depending on a condition. <br />
+        /// Parameters embedded using string-interpolation will be automatically captured into <see cref="InterpolatedSqlBuilderBase.SqlParameters"/>.
+        /// </summary>
+        public virtual U WhereIf(bool condition, FormattableString filter)
+        {
+            return WhereIf(condition, new Filter(filter));
         }
 
         /// <summary>

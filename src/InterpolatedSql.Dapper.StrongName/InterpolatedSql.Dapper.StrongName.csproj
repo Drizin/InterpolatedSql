@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;net462;net472;net5.0;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net462;net472;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
 		<Authors>Rick Drizin</Authors>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/Drizin/InterpolatedSql/</PackageProjectUrl>
 		<Description>Dapper Query Builder using Fluent API and String Interpolation</Description>
 		<Copyright>Rick Drizin</Copyright>
 		<Company>Rick Drizin</Company>
-		<Version>2.4.1</Version>
+		<Version>2.5.0</Version>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<Title>InterpolatedSql.Dapper (Strong Named)</Title>
 		<PackageId>InterpolatedSql.Dapper.StrongName</PackageId>
