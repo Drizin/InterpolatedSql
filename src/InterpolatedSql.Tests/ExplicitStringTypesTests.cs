@@ -229,6 +229,15 @@ namespace InterpolatedSql.Tests
                 IsAnsi = false,
                 IsFixedLength = true
             };
+            yield return new TestFormatInput()
+            {
+                StringSql = $"INSERT INTO [Table] (col1) VALUES ({new XElement("Properties", new XAttribute("value", 1)):text});",
+                ListSql = $"SELECT col1 FROM [Table] WHERE col1 IN {new[] { new XElement("Properties", new XAttribute("value", 1)), new XElement("Properties", new XAttribute("value", 2)) }:text};",
+                Value = new[] { new XElement("Properties", new XAttribute("value", 1)).ToString(), new XElement("Properties", new XAttribute("value", 2)).ToString() },
+                Length = int.MaxValue,
+                IsAnsi = true,
+                IsFixedLength = true
+            };
 
         }
 
