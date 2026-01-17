@@ -1,6 +1,6 @@
 using NUnit.Framework;
 using InterpolatedSql.SqlBuilders;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 
 namespace InterpolatedSql.Dapper.Tests;
 

@@ -1,19 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;net5.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
-	<Nullable>enable</Nullable>
-
-	  <IsPackable>false</IsPackable>
-
+    <TargetFrameworks>net462;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
     <Company>Rick Drizin</Company>
-
     <Copyright>Rick Drizin</Copyright>
-
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-
     <PackageProjectUrl>https://github.com/Drizin/InterpolatedSql/</PackageProjectUrl>
-	  <LangVersion>11.0</LangVersion>
+    <LangVersion>11.0</LangVersion>
+    <SuppressTfmSupportBuildErrors>true</SuppressTfmSupportBuildErrors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,11 +20,11 @@
     <PackageReference Include="MySql.Data" Version="9.3.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 	<PackageReference Include="Npgsql" Version="8.0.8" />
-    <PackageReference Include="nunit" Version="3.13.3" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
+    <PackageReference Include="nunit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
-	<PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
   </ItemGroup>
 
   <ItemGroup>
