@@ -24,13 +24,16 @@ namespace InterpolatedSql.Dapper
 
         /// Creates a <see cref="ParametersDictionary"/> built from Implicit Parameters (loaded from <see cref="IInterpolatedSql.SqlParameters" />)
         /// and Explicit Parameters (loaded from <see cref="IInterpolatedSql.ExplicitParameters"/>)
-        public static ParametersDictionary LoadFrom(IInterpolatedSql sql, Func<InterpolatedSqlParameter, int, string>? calculateAutoParameterName = null) 
+        public static ParametersDictionary LoadFrom(IInterpolatedSql sql) 
         {
             sql = (sql as ISqlEnricher)?.GetEnrichedSql() ?? sql;
             var parameters = new ParametersDictionary();
             //HashSet<string> parmNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase); //TODO: check for name clashes, rename as required
 
-            calculateAutoParameterName ??=  ((sql as IDapperSqlBuilder)?.Options?.CalculateAutoParameterName ?? InterpolatedSql.SqlBuilders.InterpolatedSqlBuilderOptions.DefaultOptions.CalculateAutoParameterName);
+            Func<InterpolatedSqlParameter, int, string> calculateAutoParameterName = 
+                (sql as IDapperSqlBuilder)?.Options?.CalculateAutoParameterName ??
+                ((parm, pos) => InterpolatedSqlDapperOptions.DefaultOptions.InterpolatedSqlParameterParser.CalculateAutoParameterName(
+                    parm, pos, InterpolatedSql.SqlBuilders.InterpolatedSqlBuilderOptions.DefaultOptions));
 
             for (int i = 0; i < sql.ExplicitParameters.Count; i++)
             {
@@ -39,12 +42,11 @@ namespace InterpolatedSql.Dapper
 
             for (int i = 0; i < sql.SqlParameters.Count; i++)
             {
-                // ParseArgument usually just returns parmValue (dbType and direction are only extracted if explicitly defined using format specifiers)
-                // Dapper will pick the right DbType even if you don't explicitly specify the DbType - and for most cases size don't need to be specified
-
                 var parmName = calculateAutoParameterName(sql.SqlParameters[i], i);
                 var parmValue = sql.SqlParameters[i].Argument;
                 var format = sql.SqlParameters[i].Format;
+                if (!string.IsNullOrWhiteSpace(format))
+                    throw new ArgumentException("Unrecognized format modifier: " + format);
 
                 if (parmValue is SqlParameterInfo parm)
                 {
@@ -74,7 +76,7 @@ namespace InterpolatedSql.Dapper
                 {
                     _dynamicParameters = new DynamicParameters();
                     foreach (var parameter in this.Values)
-                        SqlParameterMapper.Default.AddToDynamicParameters(_dynamicParameters, parameter);
+                        SqlParameterMapper.DefaultMapper.AddToDynamicParameters(_dynamicParameters, parameter);
                 }
                 return _dynamicParameters;
             }
@@ -120,12 +122,6 @@ namespace InterpolatedSql.Dapper
             }
         }
         #endregion
-
-        /// <summary>
-        /// Responsible for parsing SqlParameters (see <see cref="IInterpolatedSql.SqlParameters"/>) 
-        /// into a list of SqlParameterInfo that 
-        /// </summary>
-        public static SqlParameterMapper InterpolatedSqlParameterParser = new SqlParameterMapper();
     }
 
 }

@@ -21,7 +21,7 @@ namespace InterpolatedSql.SqlBuilders
         #region ctors
 
         /// <inheritdoc />
-        protected InterpolatedSqlBuilderBase(InterpolatedSqlBuilderOptions? options, StringBuilder? format, List<InterpolatedSqlParameter>? arguments) : base(options, format, arguments)
+        protected InterpolatedSqlBuilderBase(InterpolatedSqlBuilderOptions? options, StringBuilder? format, IEnumerable<InterpolatedSqlParameter>? arguments) : base(options, format, arguments)
         {
         }
 #if NET6_0_OR_GREATER

@@ -22,24 +22,22 @@ namespace InterpolatedSql.Dapper.SqlBuilders
         /// <inheritdoc/>
         protected QueryBuilder(
             Func<InterpolatedSqlBuilderOptions?, RB> combinedBuilderFactory1,
-            Func<InterpolatedSqlBuilderOptions?, StringBuilder?, List<InterpolatedSqlParameter>?, RB> combinedBuilderFactory2,
+            Func<InterpolatedSqlBuilderOptions?, StringBuilder?, IEnumerable<InterpolatedSqlParameter>?, RB> combinedBuilderFactory2,
             IDbConnection connection
             ) : base(combinedBuilderFactory1, combinedBuilderFactory2)
         {
             DbConnection = connection;
-            Options.CalculateAutoParameterName = (parameter, pos) => InterpolatedSqlDapperOptions.InterpolatedSqlParameterParser.CalculateAutoParameterName(parameter, pos, base.Options);
         }
 
         /// <inheritdoc/>
         protected QueryBuilder(
             Func<InterpolatedSqlBuilderOptions?, RB> combinedBuilderFactory1,
-            Func<InterpolatedSqlBuilderOptions?, StringBuilder?, List<InterpolatedSqlParameter>?, RB> combinedBuilderFactory2,
+            Func<InterpolatedSqlBuilderOptions?, StringBuilder?, IEnumerable<InterpolatedSqlParameter>?, RB> combinedBuilderFactory2,
             IDbConnection connection,
             FormattableString query
             ) : base(combinedBuilderFactory1, combinedBuilderFactory2, query)
         {
             DbConnection = connection;
-            Options.CalculateAutoParameterName = (parameter, pos) => InterpolatedSqlDapperOptions.InterpolatedSqlParameterParser.CalculateAutoParameterName(parameter, pos, base.Options);
         }
         #endregion
 
@@ -51,6 +49,12 @@ namespace InterpolatedSql.Dapper.SqlBuilders
         {
             get => base.DbConnection!;
             set => base.DbConnection = value;
+        }
+
+        /// <inheritdoc />
+        protected override string CalculateAutoParameterName(InterpolatedSqlParameter sqlParameter, int position)
+        {
+            return InterpolatedSqlDapperOptions.DefaultOptions.InterpolatedSqlParameterParser.CalculateAutoParameterName(sqlParameter, position, base.Options);
         }
         #endregion
 

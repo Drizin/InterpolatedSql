@@ -170,7 +170,9 @@ namespace InterpolatedSql
             // InterpolatedSqlParameter is the argument of a previously parsed InterpolatedSqlBuilder
             if (argument is InterpolatedSqlParameter isArg && argumentFormat == null)
             {
-                AppendArgument(target, isArg.Argument, 0, isArg.Format);
+                argument = isArg.Argument;
+                argumentFormat = isArg.Format;
+                AppendArgument(target, argument, argumentAlignment, argumentFormat);
                 return;
             }
 
@@ -202,20 +204,19 @@ namespace InterpolatedSql
                 return;
             }
 
-            TransformArgument(ref argument, ref argumentAlignment, ref argumentFormat);
             AppendArgument(target, argument, argumentAlignment, argumentFormat);
         }
 
         /// <summary>
         /// This method can be used to transform the argument into different object types.
         /// 
-        /// For most cases argumentValue will be a primitive type (int, string) and won't be transformed here, 
-        /// then later in the process (when Dapper/ORM comes in) these primitive types are converted to your db types (for most cases can infer the right DbType).
+        /// In most cases argumentValue will be a primitive type (int, string) and won't be transformed here, 
+        /// then later in the process (when Dapper/ORM comes in) these primitive types are converted to your db types (in most cases Dapper can infer the right DbType).
         /// 
         /// For very specific cases it's possible to explicitly define the DbType using format specifiers,
         /// and in this case argumentValue will be transformed into a <see cref="StringParameterInfo"/> (for strings) or <see cref="DbTypeParameterInfo"/> (for other db types).
         /// </summary>
-        protected virtual void TransformArgument(ref object? argumentValue, ref int argumentAlignment, ref string? argumentFormat)
+        public virtual void TransformArgument(ref object? argumentValue, ref int argumentAlignment, ref string? argumentFormat)
         {
             var argFormats = argumentFormat?.Split(new char[] { ',', '|', ':' }, StringSplitOptions.RemoveEmptyEntries).Select(f => f.Trim()) ?? Array.Empty<string>();
             var direction = ParameterDirection.Input;
@@ -239,6 +240,9 @@ namespace InterpolatedSql
 
                 Match match = regexStringDbType.Match(testedFormat);
 
+                // In most cases the values embedded into an interpolated string will just be preserved as is
+                // (dbType and direction are only extracted if explicitly defined using format specifiers)
+                // Even without specifying DbType usually Dapper can set it correctly, and usually you don't even need to specify Length
                 if (match.Success)
                 {
                     var dbTypeString = match.Groups["dbtype"].Value;

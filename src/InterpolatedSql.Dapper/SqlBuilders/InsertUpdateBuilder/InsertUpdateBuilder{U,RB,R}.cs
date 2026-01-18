@@ -21,7 +21,6 @@ namespace InterpolatedSql.Dapper.SqlBuilders.InsertUpdateBuilder
         protected InsertUpdateBuilder(string tableName, Func<InterpolatedSqlBuilderOptions?, RB> combinedBuilderFactory, IDbConnection connection) : base(tableName, combinedBuilderFactory)
         {
             DbConnection = connection;
-            Options.CalculateAutoParameterName = (parameter, pos) => InterpolatedSqlDapperOptions.InterpolatedSqlParameterParser.CalculateAutoParameterName(parameter, pos, base.Options);
         }
         #endregion
 
@@ -33,6 +32,12 @@ namespace InterpolatedSql.Dapper.SqlBuilders.InsertUpdateBuilder
         {
             get => base.DbConnection!;
             set => base.DbConnection = value;
+        }
+
+        /// <inheritdoc />
+        protected override string CalculateAutoParameterName(InterpolatedSqlParameter sqlParameter, int position)
+        {
+            return InterpolatedSqlDapperOptions.DefaultOptions.InterpolatedSqlParameterParser.CalculateAutoParameterName(sqlParameter, position, base.Options);
         }
         #endregion
 

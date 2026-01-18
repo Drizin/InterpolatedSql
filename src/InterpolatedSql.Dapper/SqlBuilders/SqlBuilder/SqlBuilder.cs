@@ -11,7 +11,7 @@ namespace InterpolatedSql.Dapper.SqlBuilders
     {
         #region ctors
         /// <inheritdoc />
-        public SqlBuilder(IDbConnection connection, InterpolatedSqlBuilderOptions? options, StringBuilder? format, List<InterpolatedSqlParameter>? arguments) : base(connection, options, format, arguments)
+        public SqlBuilder(IDbConnection connection, InterpolatedSqlBuilderOptions? options, StringBuilder? format, IEnumerable<InterpolatedSqlParameter>? arguments) : base(connection, options, format, arguments)
         {
             DbConnection = connection;
         }
@@ -45,6 +45,14 @@ namespace InterpolatedSql.Dapper.SqlBuilders
             return this.ToDapperSqlCommand();
         }
 
+        /// <inheritdoc />
+        protected override string CalculateAutoParameterName(InterpolatedSqlParameter sqlParameter, int position)
+        {
+            return InterpolatedSqlDapperOptions.DefaultOptions.InterpolatedSqlParameterParser.CalculateAutoParameterName(sqlParameter, position, base.Options);
+        }
+
+        #endregion
+
         /// <summary>
         /// Like <see cref="InterpolatedSqlBuilderBase.ToSql"/>
         /// </summary>
@@ -55,8 +63,6 @@ namespace InterpolatedSql.Dapper.SqlBuilders
             return new ImmutableDapperCommand(this.DbConnection, BuildSql(format, _sqlParameters), format, _sqlParameters, _explicitParameters);
         }
 
-
-        #endregion
 
     }
 }

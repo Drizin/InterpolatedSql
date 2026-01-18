@@ -105,6 +105,6 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Default Factory
         /// </summary>
-        public static SqlBuilderFactory Default = new SqlBuilderFactory();
+        public static SqlBuilderFactory DefaultFactory = new SqlBuilderFactory();
     }
 }

@@ -1,10 +1,9 @@
-﻿using InterpolatedSql.SqlBuilders;
+﻿using InterpolatedSql.Dapper.SqlBuilders;
+using InterpolatedSql.SqlBuilders;
 using System;
 using System.Data;
-using SqlBuilder = InterpolatedSql.Dapper.SqlBuilders.SqlBuilder;
 using QueryBuilder = InterpolatedSql.Dapper.SqlBuilders.QueryBuilder;
-using InterpolatedSql.Dapper.SqlBuilders;
-
+using SqlBuilder = InterpolatedSql.Dapper.SqlBuilders.SqlBuilder;
 namespace InterpolatedSql.Dapper
 {
     /// <summary>
@@ -12,8 +11,6 @@ namespace InterpolatedSql.Dapper
     /// </summary>
     public static partial class IDbConnectionExtensions
     {
-        public static SqlBuilderFactory SqlBuilderFactory { get; set; } = SqlBuilderFactory.Default;
-
         #region SqlBuilder
         /// <summary>
         /// Creates a new IInterpolatedSqlBuilder of type B over current connection
@@ -21,7 +18,7 @@ namespace InterpolatedSql.Dapper
         public static B SqlBuilder<B>(this IDbConnection cnn)
             where B : IDapperSqlBuilder
         {
-            return SqlBuilderFactory.Create<B>(cnn);
+            return SqlBuilderFactory.DefaultFactory.Create<B>(cnn);
         }
 
 #if NET6_0_OR_GREATER
@@ -34,7 +31,7 @@ namespace InterpolatedSql.Dapper
         {
             if (command.InterpolatedSqlBuilder.Options.AutoAdjustMultilineString)
                 command.AdjustMultilineString();
-            return SqlBuilderFactory.Create<B>(cnn, command.InterpolatedSqlBuilder.AsFormattableString());
+            return SqlBuilderFactory.DefaultFactory.Create<B>(cnn, command.InterpolatedSqlBuilder.AsFormattableString());
         }
 
         /// <summary>
@@ -57,7 +54,7 @@ namespace InterpolatedSql.Dapper
         {
             if (command.InterpolatedSqlBuilder.Options.AutoAdjustMultilineString)
                 command.AdjustMultilineString();
-            return SqlBuilderFactory.Create<B>(cnn, command.InterpolatedSqlBuilder.AsFormattableString(), options);
+            return SqlBuilderFactory.DefaultFactory.Create<B>(cnn, command.InterpolatedSqlBuilder.AsFormattableString(), options);
         }
 
         /// <summary>
@@ -82,7 +79,7 @@ namespace InterpolatedSql.Dapper
             )
             where B : IDapperSqlBuilder
         {
-            return SqlBuilderFactory.Create<B>(cnn, command);
+            return SqlBuilderFactory.DefaultFactory.Create<B>(cnn, command);
         }
 
         /// <summary>
@@ -109,7 +106,7 @@ namespace InterpolatedSql.Dapper
             )
             where B : IDapperSqlBuilder
         {
-            return SqlBuilderFactory.Create<B>(cnn, command, options);
+            return SqlBuilderFactory.DefaultFactory.Create<B>(cnn, command, options);
         }
 
         /// <summary>
@@ -147,7 +144,7 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Creates a new QueryBuilder over current connection
         /// </summary>
-        /// <param name="query">You can use "{where}" or "/**where**/" in your query, and it will be replaced by "WHERE + filters" (if any filter is defined). <br />
+        /// <param name="command">You can use "{where}" or "/**where**/" in your query, and it will be replaced by "WHERE + filters" (if any filter is defined). <br />
         /// You can use "{filters}" or "/**filters**/" in your query, and it will be replaced by "filters" (without where) (if any filter is defined).
         /// </param>
         public static QueryBuilder QueryBuilder(this IDbConnection cnn, ref InterpolatedSqlHandler command)

@@ -13,6 +13,11 @@ namespace InterpolatedSql.Dapper
     /// </summary>
     public class SqlParameterMapper
     {
+        /// <inheritdoc />
+        public SqlParameterMapper()
+        {
+        }
+
         /// <summary>
         /// Calculates the name automatically assigned to interpolated parameters
         /// </summary>
@@ -23,8 +28,14 @@ namespace InterpolatedSql.Dapper
                 (IsEnumerable(parameter.Argument) ? options.ParameterArrayNameSuffix : "");
         }
 
+        /// <summary>
+        /// Dapper treats arrays/lists as table-valued parameters or lists for IN clauses,
+        /// we just use this information for renaming parameters to prevent a rare name conflict.
+        /// </summary>
         protected bool IsEnumerable(object? value)
         {
+            if (value != null && value is SqlParameterInfo)
+                value = ((SqlParameterInfo)value).Value;
             if (value == null || value is DBNull)  //SqlMapper.GetDbType
                 return false;
             Type t = value.GetType();
@@ -37,6 +48,7 @@ namespace InterpolatedSql.Dapper
         /// </summary>
         public virtual void AddToDynamicParameters(DynamicParameters target, SqlParameterInfo parameter)
         {
+            // This behaves like Options.Parser.TransformArgument, but for Dapper parameters
             //TODO: do implicit parameters have names here?!
             if (parameter is DbTypeParameterInfo dbParm)
                 target.Add(parameter.Name!, parameter.Value, dbParm.DbType, parameter.ParameterDirection ?? ParameterDirection.Input, dbParm.Size);
@@ -53,6 +65,6 @@ namespace InterpolatedSql.Dapper
         /// <summary>
         /// Default mapper. By inheriting/overriding it's possible to modify this behavior
         /// </summary>
-        public static SqlParameterMapper Default = new SqlParameterMapper();
+        public static SqlParameterMapper DefaultMapper { get; set; } = new SqlParameterMapper();
     }
 }

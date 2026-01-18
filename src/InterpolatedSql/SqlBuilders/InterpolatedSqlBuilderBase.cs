@@ -40,6 +40,7 @@ namespace InterpolatedSql.SqlBuilders
 
         /// <summary>
         /// This is like <see cref="FormattableString.Format"/> which is the underlying format of the interpolated string.
+        /// (e.g. "SELECT * FROM Table WHERE Column = {0} AND OtherColumn = {1}")
         /// </summary>
         public string Format => _format.ToString();
 
@@ -96,7 +97,7 @@ namespace InterpolatedSql.SqlBuilders
         protected string BuildSql(string format, IEnumerable<InterpolatedSqlParameter> sqlParameters)
         {
             if (sqlParameters.Any())
-                return string.Format(format, sqlParameters.Select((parm, pos) => Options.FormatParameterName(CalculateAutoParameterName(parm, pos))).ToArray());
+                return string.Format(format, sqlParameters.Select((parm, pos) => FormatParameterName(CalculateAutoParameterName(parm, pos))).ToArray());
             else
                 return format;
         }
@@ -110,18 +111,27 @@ namespace InterpolatedSql.SqlBuilders
         #region ctors
 
         /// <inheritdoc />
-        protected InterpolatedSqlBuilderBase(InterpolatedSqlBuilderOptions? options, StringBuilder? format, List<InterpolatedSqlParameter>? arguments)
+        protected InterpolatedSqlBuilderBase(InterpolatedSqlBuilderOptions? options, StringBuilder? format, IEnumerable<InterpolatedSqlParameter>? sqlParameters)
         {
-            Options = options ?? new InterpolatedSqlBuilderOptions();
+            Options = options ?? InterpolatedSqlBuilderOptions.Create();
             ResetAutoSpacing();
             _format = format ?? new StringBuilder();
-            _sqlParameters = arguments ?? new List<InterpolatedSqlParameter>();
+            if (sqlParameters == null)
+            {
+                _sqlParameters = new List<InterpolatedSqlParameter>();
+            }
+            else
+            {
+                _sqlParameters = new List<InterpolatedSqlParameter>(sqlParameters.Count());
+                foreach (var sqlParameter in sqlParameters)
+                    AddArgument(sqlParameter);
+            }
         }
 #if NET6_0_OR_GREATER
         /// <inheritdoc />
         public InterpolatedSqlBuilderBase(int literalLength, int formattedCount, InterpolatedSqlBuilderOptions? options = null)
         {
-            Options = options ?? new InterpolatedSqlBuilderOptions();
+            Options = options ?? InterpolatedSqlBuilderOptions.Create();
             ResetAutoSpacing();
             _format = new StringBuilder(literalLength + formattedCount * 4); // embedded parameter will usually occupy 3-4 chars ("{0}"..."{99}")
             _sqlParameters = new List<InterpolatedSqlParameter>(formattedCount);
@@ -137,7 +147,7 @@ namespace InterpolatedSql.SqlBuilders
         /// If <see cref="InterpolatedSqlBuilderOptions.ReuseIdenticalParameters"/> is true then this method will try to reuse existing parameters, according to <see cref="InterpolatedSqlBuilderOptions.ArgumentComparer"/>
         /// </summary>
         /// <returns>Position where parameter was added</returns>
-        protected internal virtual int AddArgument(InterpolatedSqlParameter argument)
+        protected virtual int AddArgument(InterpolatedSqlParameter argument)
         {
             if (Options.ReuseIdenticalParameters && Options.ArgumentComparer != null)
                 // Reuse existing parameters (don't pass duplicates)
@@ -150,19 +160,36 @@ namespace InterpolatedSql.SqlBuilders
         }
 
         /// <summary>
+        /// Appends an argument and returns the index of the argument in the list <see cref="SqlParameters"/>.
+        /// May transform argument/format through <see cref="IInterpolatedSqlParser.TransformArgument"/>
+        /// This method will only add the argument object to the list of arguments - it will NOT add the placeholder to the format StringBuilder (e.g. "{2}").
+        /// Appending parameters and adding them to the underlying StringBuilder is usually done by concatenating or (equivalent) by calling <see cref="AppendArgument(object, int, string)"/>.
+        /// If <see cref="InterpolatedSqlBuilderOptions.ReuseIdenticalParameters"/> is true then this method will try to reuse existing parameters, according to <see cref="InterpolatedSqlBuilderOptions.ArgumentComparer"/>
+        /// </summary>
+        /// <returns>Position where parameter was added</returns>
+        protected virtual int AddArgument(ref object? argument, ref int argumentAlignment, ref string? format)
+        {
+            Options.Parser.TransformArgument(ref argument, ref argumentAlignment, ref format);
+            return AddArgument(new InterpolatedSqlParameter(argument, format));
+        }
+
+        /// <summary>
         /// Appends an argument.
         /// This will both add the argument object to the list of arguments (see <see cref="AddArgument(InterpolatedSqlParameter)"/>)
         /// and will also add the placeholder to the format StringBuilder (e.g. "{2}")
+        /// May transform argument/format through <see cref="IInterpolatedSqlParser.TransformArgument"/>
         /// </summary>
-        public virtual void AppendArgument(object? argument, int alignment = 0, string? format = null)
+        public virtual void AppendArgument(ref object? argument, ref int alignment, ref string? format)
         {
             if (format == "raw")
             {
                 AppendRaw(argument?.ToString() ?? "");
+                if (alignment != 0)
+                    AppendRaw("," + alignment.ToString());
                 return;
             }
 
-            int argumentPos = AddArgument(new InterpolatedSqlParameter(argument, format));
+            int argumentPos = AddArgument(ref argument, ref alignment, ref format);
             if (AutoSpacing)
                 CheckAutoSpacing(null);
             _format.Append("{");
@@ -172,6 +199,17 @@ namespace InterpolatedSql.SqlBuilders
             if (Options.PreserveArgumentFormatting && !string.IsNullOrEmpty(format))
                 _format.Append(":").Append(format);
             _format.Append("}");
+        }
+
+        /// <summary>
+        /// Appends an argument.
+        /// This will both add the argument object to the list of arguments (see <see cref="AddArgument(InterpolatedSqlParameter)"/>)
+        /// and will also add the placeholder to the format StringBuilder (e.g. "{2}")
+        /// May transform argument/format through <see cref="IInterpolatedSqlParser.TransformArgument"/> - so if you're using the argument for anything after the call please prefer the overload that takes paramters as ref.
+        /// </summary>
+        public virtual void AppendArgument(object? argument, int alignment = 0, string? format = null) 
+        {
+            AppendArgument(ref argument, ref alignment, ref format);
         }
 
         /// <summary>
@@ -403,6 +441,7 @@ namespace InterpolatedSql.SqlBuilders
         /// Appends a raw string. 
         /// This is like <see cref="AppendLiteral(string)"/> but it's a little faster since it does not escape curly-braces 
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AppendRaw(string value)
         {
             _format.Append(value);
@@ -410,12 +449,21 @@ namespace InterpolatedSql.SqlBuilders
 
 
         /// <summary>
+        /// Given a parameter name, how it should be formatted when the SQL statement is generated (e.g. add "@" before name for MSSQL, or add ":" for Oracle, etc.)
+        /// It's possible to customize this either by overriding method, or by modifying the <see cref="InterpolatedSqlBuilderOptions.FormatParameterName"/>
+        /// </summary>
+        protected virtual string FormatParameterName(string parameterName)
+        {
+            return Options.FormatParameterName(parameterName);
+        }
+
+        /// <summary>
         /// Given the argument and it's index position (int), this defines how the auto generated parameter name should be named (e.g. add "p" before position).
         /// It's possible to customize this either by overriding method, or by modifying the <see cref="InterpolatedSqlBuilderOptions.CalculateAutoParameterName"/>
         /// </summary>
-        protected virtual string CalculateAutoParameterName(InterpolatedSqlParameter argument, int position)
+        protected virtual string CalculateAutoParameterName(InterpolatedSqlParameter sqlParameter, int position)
         {
-            return Options.CalculateAutoParameterName(argument, position);
+            return Options.CalculateAutoParameterName(sqlParameter, position);
         }
 
         /// <summary>
@@ -552,6 +600,7 @@ namespace InterpolatedSql.SqlBuilders
         /// <summary>
         /// Inserts another literal at a specific position.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InsertLiteral(int index, string value)
         {
             _format.Insert(index, value);
@@ -560,6 +609,7 @@ namespace InterpolatedSql.SqlBuilders
         /// <summary>
         /// Removes the specified range of characters from this instance.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Remove(int startIndex, int length)
         {
             _format.Remove(startIndex, length);
@@ -703,14 +753,22 @@ namespace InterpolatedSql.SqlBuilders
                 if (!parms.Any())
                     return "\"" + built.Sql + "\"";
                 var formattedParms = parms.Select(
-                    (parm, pos) => Options.FormatParameterName(CalculateAutoParameterName(parm, pos))
+                    (parm, pos) => FormatParameterName(CalculateAutoParameterName(parm, pos))
                     + "="
-                    + (parms[pos].Argument is string ? "'" : "")
-                    + (parms[pos].Argument?.ToString() ?? "")
-                    + (parms[pos].Argument is string ? "'" : "")
-                    );
+                    + FormatArgumentForDisplay(parm)
+                    ).ToArray();
+                // This is invalid SQL intentionally - to protect against stupid mistakes of executing it directly
                 return "\"" + built.Sql + "\"" + " (" + string.Join(", ", formattedParms) + ")";
             }
+        }
+
+        /// <summary>
+        /// How to format an argument for display in the debugger or in ToString().
+        /// It's possible to customize this either by overriding method, or by modifying the <see cref="InterpolatedSqlBuilderOptions.CalculateAutoParameterName"/>
+        /// </summary>
+        protected virtual string FormatArgumentForDisplay(object? value)
+        {
+            return Options.FormatArgumentForDisplay(value);
         }
 
         /// <summary>
@@ -782,8 +840,12 @@ namespace InterpolatedSql.SqlBuilders
         /// <returns></returns>
         public FormattableString AsFormattableString()
         {
-            var sql = AsSql();
-            return FormattableStringFactory.Create(sql.Format, sql.SqlParameters.ToArray());
+            if (this is ISqlEnricher enricher)
+            {
+                var sql = enricher.GetEnrichedSql();
+                return FormattableStringFactory.Create(sql.Format, sql.SqlParameters.ToArray());
+            }
+            return FormattableStringFactory.Create(_format.ToString(), _sqlParameters.ToArray());
         }
         #endregion
     }

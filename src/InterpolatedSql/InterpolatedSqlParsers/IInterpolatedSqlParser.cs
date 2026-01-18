@@ -27,5 +27,8 @@ namespace InterpolatedSql
 
         /// <inheritdoc cref="InterpolatedSqlParser.AdjustMultilineString"/>
         string AdjustMultilineString(string block);
+
+        /// <inheritdoc cref="InterpolatedSqlParser.TransformArgument"/>
+        void TransformArgument(ref object? argumentValue, ref int argumentAlignment, ref string? argumentFormat);
     }
 }

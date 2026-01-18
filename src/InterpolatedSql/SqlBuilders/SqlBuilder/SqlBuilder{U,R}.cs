@@ -22,7 +22,7 @@ namespace InterpolatedSql.SqlBuilders
     {
         #region ctor
         /// <inheritdoc />
-        protected SqlBuilder(InterpolatedSqlBuilderOptions? options, StringBuilder? format, List<InterpolatedSqlParameter>? arguments) : base(options ?? InterpolatedSqlBuilderOptions.DefaultOptions, format, arguments)
+        protected SqlBuilder(InterpolatedSqlBuilderOptions? options, StringBuilder? format, IEnumerable<InterpolatedSqlParameter>? arguments) : base(options ?? InterpolatedSqlBuilderOptions.DefaultOptions, format, arguments)
         {
         }
 

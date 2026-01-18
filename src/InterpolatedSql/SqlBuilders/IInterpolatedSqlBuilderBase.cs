@@ -33,6 +33,8 @@ namespace InterpolatedSql.SqlBuilders
         /// <inheritdoc cref="InterpolatedSqlBuilderBase.AppendArgument(object?, int, string?)"/>
         void AppendArgument(object? argument, int alignment = 0, string? format = null);
 
+        /// <inheritdoc cref="InterpolatedSqlBuilderBase.AppendArgument(ref object?, ref int, ref string?)"/>
+        void AppendArgument(ref object? argument, ref int alignment, ref string? format);
 
         /// <inheritdoc cref="InterpolatedSqlBuilderBase{U, R}.AppendFormattableString(FormattableString)"/>
         void AppendFormattableString(FormattableString value);
