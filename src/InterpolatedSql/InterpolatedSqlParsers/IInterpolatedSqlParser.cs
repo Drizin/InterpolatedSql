@@ -27,5 +27,11 @@ namespace InterpolatedSql
 
         /// <inheritdoc cref="InterpolatedSqlParser.AdjustMultilineString"/>
         string AdjustMultilineString(string block);
+
+        /// <summary>
+        /// Transforms an argument based on format specifiers (e.g., ":text", ":varchar(100)").
+        /// Handles conversion of types like XElement to string, and wraps values in StringParameterInfo or DbTypeParameterInfo when needed.
+        /// </summary>
+        void TransformArgument(ref object? argumentValue, ref int argumentAlignment, ref string? argumentFormat);
     }
 }
