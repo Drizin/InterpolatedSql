@@ -162,6 +162,11 @@ namespace InterpolatedSql.SqlBuilders
                 return;
             }
 
+            // Transform argument based on format specifier before storing it
+            // This ensures both FormattableString (legacy) and InterpolatedStringHandler (NET6+) paths
+            // get the full transformation logic (string types, DbTypes, XElement handling, etc.)
+            Options.Parser.TransformArgument(ref argument, ref alignment, ref format);
+
             int argumentPos = AddArgument(new InterpolatedSqlParameter(argument, format));
             if (AutoSpacing)
                 CheckAutoSpacing(null);

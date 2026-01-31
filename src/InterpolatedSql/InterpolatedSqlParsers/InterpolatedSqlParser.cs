@@ -215,7 +215,7 @@ namespace InterpolatedSql
         /// For very specific cases it's possible to explicitly define the DbType using format specifiers,
         /// and in this case argumentValue will be transformed into a <see cref="StringParameterInfo"/> (for strings) or <see cref="DbTypeParameterInfo"/> (for other db types).
         /// </summary>
-        protected virtual void TransformArgument(ref object? argumentValue, ref int argumentAlignment, ref string? argumentFormat)
+        public virtual void TransformArgument(ref object? argumentValue, ref int argumentAlignment, ref string? argumentFormat)
         {
             var argFormats = argumentFormat?.Split(new char[] { ',', '|', ':' }, StringSplitOptions.RemoveEmptyEntries).Select(f => f.Trim()) ?? Array.Empty<string>();
             var direction = ParameterDirection.Input;
@@ -251,7 +251,11 @@ namespace InterpolatedSql
                     var isAnsi = ansiTypes.Contains(dbTypeString, StringComparer.OrdinalIgnoreCase);
                     var isFixedLength = isMaxStringLength || fixedLengthTypes.Contains(dbTypeString, StringComparer.OrdinalIgnoreCase);
 
-                    if (argumentValue is IEnumerable<object> enumerable)
+                    // Check for types that implement IEnumerable but should be treated as single string values
+                    // XElement, XDocument, etc. implement IEnumerable<XNode> but when used with :text format should be converted to string
+                    bool isXmlType = argumentValue?.GetType().Namespace == "System.Xml.Linq";
+                    
+                    if (!isXmlType && argumentValue is IEnumerable<object> enumerable)
                     {
                         argumentValue = enumerable.Select(arg => {
                             var value = TransformStringArgument(arg);
