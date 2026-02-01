@@ -2,7 +2,6 @@
 using System.Data;
 using System;
 using InterpolatedSql.Dapper.SqlBuilders;
-using System.Linq;
 
 namespace InterpolatedSql.Dapper.Tests
 {
@@ -112,7 +111,9 @@ namespace InterpolatedSql.Dapper.Tests
             Assert.AreEqual(someValue, cmd.DapperParameters["p0"].Value);
             Assert.AreEqual(otherValue, cmd.DapperParameters["p1"].Value);
         }
-
+    }
+    public class ExtensibilityTests2 
+    { 
         public class MyCustomSqlParameterMapper : SqlParameterMapper
         {
             public override string CalculateAutoParameterName(InterpolatedSqlParameter parameter, int pos, InterpolatedSql.SqlBuilders.InterpolatedSqlBuilderOptions options)
@@ -128,6 +129,18 @@ namespace InterpolatedSql.Dapper.Tests
                 return parameter.Format!.Split( ':' )[ 0 ] + (base.IsEnumerable(parameter.Argument) ? options.ParameterArrayNameSuffix : "");
             }
         }
+        [SetUp]
+        public void Setup()
+        {
+            // This would work with pure InterpolatedSql
+            //InterpolatedSql.SqlBuilders.InterpolatedSqlBuilderOptions.DefaultOptions.CalculateAutoParameterName = (p, pos) => p.Format!; 
+
+            // But InterpolatedSql.Dapper builders will override CalculateAutoParameterName using InterpolatedSqlDapperOptions.InterpolatedSqlParameterParser, so we can subclass that
+            InterpolatedSqlDapperOptions.DefaultOptions = new InterpolatedSqlDapperOptions()
+            {
+                InterpolatedSqlParameterParser = new MyCustomSqlParameterMapper()
+            };
+        }
 
         [Test]
         [NonParallelizable]
@@ -135,12 +148,6 @@ namespace InterpolatedSql.Dapper.Tests
         {
             DateTime asOfDate = DateTime.Now;
             IDbConnection cn = null!;
-
-            // This would work with pure InterpolatedSqlL
-            //InterpolatedSql.SqlBuilders.InterpolatedSqlBuilderOptions.DefaultOptions.CalculateAutoParameterName = (p, pos) => p.Format!; 
-
-            // But InterpolatedSql.Dapper builders will override CalculateAutoParameterName using InterpolatedSqlDapperOptions.InterpolatedSqlParameterParser, so we can subclass that
-            InterpolatedSqlDapperOptions.InterpolatedSqlParameterParser = new MyCustomSqlParameterMapper();
 
             var query = cn.QueryBuilder($"Select * from Users Where ModifiedDate >= {asOfDate:asOfDate}").Build();
             Assert.AreEqual("Select * from Users Where ModifiedDate >= @asOfDate", query.Sql);
@@ -156,7 +163,13 @@ namespace InterpolatedSql.Dapper.Tests
             Assert.AreEqual(false, parameterInfo.IsFixedLength, "IsFixedLength mismatch.");
             Assert.AreEqual(200, parameterInfo.Length, "Argument length mismatch.");
 
-            InterpolatedSqlDapperOptions.InterpolatedSqlParameterParser = new SqlParameterMapper();
+            InterpolatedSqlDapperOptions.DefaultOptions = new InterpolatedSqlDapperOptions();
+        }
+
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            InterpolatedSqlDapperOptions.DefaultOptions = new InterpolatedSqlDapperOptions();
         }
 
     }

@@ -1,14 +1,16 @@
-using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using Microsoft.Data.SqlClient;
-using System.Linq;
+﻿using Dapper;
 using InterpolatedSql;
 using InterpolatedSql.SqlBuilders;
-using System.Threading.Tasks;
 using InterpolatedSql.Tests;
-using Dapper;
+using Microsoft.Data.SqlClient;
+using NUnit.Framework;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Xml.Linq;
 //using TestHelper = InterpolatedSql.Dapper.Tests.TestHelper;
 
 namespace InterpolatedSql.Dapper.Tests
@@ -1003,6 +1005,81 @@ END").Execute();
                 r = gridReader.Read<dynamic>();
                 Assert.AreEqual(count, r.Count());
             }
+        }
+
+        [Test]
+        [NonParallelizable]
+        public async Task XmlTypeTest()
+        {
+            try
+            {
+                cn.Execute(@"
+
+                    IF OBJECT_ID('[Files]', 'U') IS NOT NULL
+                        DROP TABLE Files;
+
+                    CREATE TABLE Files (
+                        [Key] INT IDENTITY(1,1) PRIMARY KEY,
+                        Properties TEXT
+                    )
+                ");
+            }
+            catch
+            {
+                //ignore if table exists
+            }
+
+            Console.WriteLine("Inserting initial row with Properties = '<Properties />'...");
+            cn.Execute(@"
+                INSERT INTO Files (Properties) VALUES ('<Properties />')
+            ");
+
+            var fileKey = cn.ExecuteScalar<int>("SELECT TOP 1 [Key] FROM Files");
+            Assert.AreEqual(1, fileKey);
+
+            // Creating XElement with new XML data
+            var properties = new XElement("Properties",
+                new XElement("Property1", "Value1"),
+                new XElement("Property2", "Value2")
+            );
+
+            // Executing UPDATE query using {{properties:text}} syntax via QueryBuilder
+            var qb = cn.QueryBuilder($$"""
+                UPDATE Files 
+                SET Properties = {{properties:text}}
+                WHERE [Key] = {{fileKey}}
+                """);
+
+            var cmd = qb.Build();
+            Assert.AreEqual("""
+                UPDATE Files 
+                SET Properties = @p0
+                WHERE [Key] = @p1
+                """, cmd.Sql);
+
+            var rowsAffected = await qb.ExecuteAsync();
+            Assert.AreEqual(1, rowsAffected);
+
+            // Querying updated row
+            var updatedProperties = cn.ExecuteScalar<string>("SELECT Properties FROM Files WHERE [Key] = @key", new { key = fileKey });
+            string expected = """
+                <Properties>
+                  <Property1>Value1</Property1>
+                  <Property2>Value2</Property2>
+                </Properties>
+                """;
+            Assert.AreEqual(expected, updatedProperties);
+
+            Assert.AreEqual("""
+                UPDATE Files 
+                SET Properties = @p0
+                WHERE [Key] = @p1
+                """, cmd.Sql);
+            Assert.AreEqual(2, cmd.DapperParameters.Count);
+            Assert.AreEqual(expected, cmd.DapperParameters.Get<string>("p0"));
+            Assert.AreEqual(1, cmd.DapperParameters.Get<int>("p1"));
+
+
         }
 
     }
