@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using System.Linq;
 using InterpolatedSql.Dapper.SqlBuilders.FluentQueryBuilder;
 using InterpolatedSql.SqlBuilders;
+using System.Collections.Generic;
 
 namespace InterpolatedSql.Dapper.Tests
 {
@@ -223,11 +224,7 @@ WHERE ([ListPrice] >= @p0 AND [ListPrice] <= @p1) AND ([Weight] <= @p2 OR [Name]
             });
 
             var whereClause = filters.Build();
-            var parms = ParametersDictionary.LoadFrom(whereClause);
-            // ParametersDictionary implements Dapper.SqlMapper.IDynamicParameters - so it can be passed directly to Dapper
-            // But if you want to add to an existing Dapper.DynamicParameters you can do it:
-            //foreach (var parameter in parms)
-            //    SqlParameterMapper.Default.AddToDynamicParameters(dynamicParms, parameter.Value);
+            var parms = SqlParameterMapper.DefaultMapper.GetParametersDictionary(whereClause);
 
             Assert.AreEqual(@"WHERE ([ListPrice] >= @p0 AND [ListPrice] <= @p1) AND ([Weight] <= @p2 OR [Name] LIKE @p3)", whereClause.Sql);
 

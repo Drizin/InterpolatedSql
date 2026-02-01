@@ -56,7 +56,7 @@ ORDER BY ProductId
 
             var cmd = q.Build();
             Assert.AreEqual("SELECT * FROM Products /**where**/", cmd.Sql);
-            Assert.That(cmd.DapperParameters.Count == 0);
+            Assert.That(cmd.DapperParameters.ParameterNames.Count() == 0);
 
             maxPrice = 100;
             q.WhereIf(maxPrice != null, $"MaxPrice > {maxPrice}");
@@ -126,11 +126,7 @@ ORDER BY ProductId
             });
 
             var whereClause = filters.Build();
-            var parms = ParametersDictionary.LoadFrom(whereClause);
-            // ParametersDictionary implements Dapper.SqlMapper.IDynamicParameters - so it can be passed directly to Dapper
-            // But if you want to add to an existing Dapper.DynamicParameters you can do it:
-            //foreach (var parameter in parms)
-            //    SqlParameterMapper.Default.AddToDynamicParameters(dynamicParms, parameter.Value);
+            var parms = SqlParameterMapper.DefaultMapper.GetParametersDictionary(whereClause);
 
             Assert.AreEqual(@"WHERE ([ListPrice] >= @p0 AND [ListPrice] <= @p1) AND ([Weight] <= @p2 OR [Name] LIKE @p3)", whereClause.Sql);
 
@@ -150,11 +146,9 @@ ORDER BY ProductId
 
             Assert.AreEqual("SELECT FROM (SELECT Id, Name FROM SomeTable where OrganizationId=@p0) a join AnotherTable b on a.Id=b.Id where b.OrganizationId=@p1", q.Sql);
 
-            Assert.AreEqual(2, q.DapperParameters.Count);
-            var p0 = q.DapperParameters["p0"];
-            var p1 = q.DapperParameters["p1"];
-            Assert.AreEqual(123, p0.Value);
-            Assert.AreEqual(321, p1.Value);
+            Assert.AreEqual(2, q.DapperParameters.ParameterNames.Count());
+            Assert.AreEqual(123, q.DapperParameters.Get<int>("p0"));
+            Assert.AreEqual(321, q.DapperParameters.Get<int>("p1"));
         }
 
         [Test]
@@ -167,10 +161,10 @@ ORDER BY ProductId
 
             Assert.AreEqual("SELECT FROM (SELECT Id, Name, @p0 AS ssn FROM SomeTable where OrganizationId=@p1) a join AnotherTable b on a.Id=b.Id where b.OrganizationId=@p2", q.Sql);
 
-            Assert.AreEqual(3, q.DapperParameters.Count);
-            Assert.AreEqual("111111111", q.DapperParameters["p0"].Value);
-            Assert.AreEqual(123, q.DapperParameters["p1"].Value);
-            Assert.AreEqual(321, q.DapperParameters["p2"].Value);
+            Assert.AreEqual(3, q.DapperParameters.ParameterNames.Count());
+            Assert.AreEqual("111111111", q.DapperParameters.Get<string>("p0"));
+            Assert.AreEqual(123, q.DapperParameters.Get<int>("p1"));
+            Assert.AreEqual(321, q.DapperParameters.Get<int>("p2"));
         }
 
         [Test]
@@ -184,9 +178,9 @@ ORDER BY ProductId
 
             Assert.AreEqual("SELECT col1, @p0 as col2 FROM Table1 WHERE col3 = @p1", q.Sql);
 
-            Assert.AreEqual(2, q.DapperParameters.Count);
-            Assert.AreEqual(val1, q.DapperParameters["p0"].Value);
-            Assert.AreEqual(val2, q.DapperParameters["p1"].Value);
+            Assert.AreEqual(2, q.DapperParameters.ParameterNames.Count());
+            Assert.AreEqual(val1, q.DapperParameters.Get<string>("p0"));
+            Assert.AreEqual(val2, q.DapperParameters.Get<string>("p1"));
         }
 
         [Test]
@@ -200,9 +194,9 @@ ORDER BY ProductId
 
             Assert.AreEqual("SELECT col1, @p0 as col2 FROM Table1 WHERE col3 = @p1", q.Sql);
 
-            Assert.AreEqual(2, q.DapperParameters.Count);
-            Assert.AreEqual(val1, q.DapperParameters["p0"].Value);
-            Assert.AreEqual(val2, q.DapperParameters["p1"].Value);
+            Assert.AreEqual(2, q.DapperParameters.ParameterNames.Count());
+            Assert.AreEqual(val1, q.DapperParameters.Get<string>("p0"));
+            Assert.AreEqual(val2, q.DapperParameters.Get<string>("p1"));
         }
 
         [Test]

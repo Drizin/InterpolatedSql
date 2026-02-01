@@ -2,6 +2,7 @@
 using System.Data;
 using System;
 using InterpolatedSql.Dapper.SqlBuilders;
+using System.Linq;
 
 namespace InterpolatedSql.Dapper.Tests
 {
@@ -106,10 +107,10 @@ namespace InterpolatedSql.Dapper.Tests
                 SomeArbitrarySql
                 """, cmd.Sql);
 
-            Assert.That(cmd.DapperParameters.ParameterNames.Contains("p0"));
-            Assert.That(cmd.DapperParameters.ParameterNames.Contains("p1"));
-            Assert.AreEqual(someValue, cmd.DapperParameters["p0"].Value);
-            Assert.AreEqual(otherValue, cmd.DapperParameters["p1"].Value);
+            Assert.That(cmd.DapperParameters.ParameterNames.ToList().Contains("p0"));
+            Assert.That(cmd.DapperParameters.ParameterNames.ToList().Contains("p1"));
+            Assert.AreEqual(someValue, cmd.DapperParameters.Get<string>("p0"));
+            Assert.AreEqual(otherValue, cmd.DapperParameters.Get<string>("p1"));
         }
     }
     public class ExtensibilityTests2 

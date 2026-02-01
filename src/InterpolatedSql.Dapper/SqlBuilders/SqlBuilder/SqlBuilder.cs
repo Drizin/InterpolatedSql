@@ -56,11 +56,12 @@ namespace InterpolatedSql.Dapper.SqlBuilders
         /// <summary>
         /// Like <see cref="InterpolatedSqlBuilderBase.ToSql"/>
         /// </summary>
-        /// <returns></returns>
         public IDapperSqlCommand ToDapperSqlCommand()
         {
+            var dictionaryparameters = SqlParameterMapper.DefaultMapper.GetParametersDictionary(_sqlParameters, _explicitParameters, Options);
+            var dapperParameters = dictionaryparameters.DynamicParameters;
             string format = _format.ToString();
-            return new ImmutableDapperCommand(this.DbConnection, BuildSql(format, _sqlParameters), format, _sqlParameters, _explicitParameters);
+            return new ImmutableDapperCommand(this.DbConnection, BuildSql(format, _sqlParameters), format, _sqlParameters, _explicitParameters, dictionaryparameters, dapperParameters);
         }
 
 

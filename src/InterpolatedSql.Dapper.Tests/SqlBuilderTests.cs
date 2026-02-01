@@ -218,21 +218,14 @@ ORDER BY [ProductId]", query.Build().Sql);
         [Test]
         public void TestStoredProcedureOutput()
         {
-            MyPoco poco = new MyPoco();
-
             var cmd = cn.SqlBuilder($"[dbo].[sp_TestOutput]")
-                .AddParameter("Input1", dbType: DbType.Int32);
-            //.AddParameter("Output1",  dbType: DbType.Int32, direction: ParameterDirection.Output);
-            //var getter = ParameterInfos.GetSetter((MyPoco p) => p.MyValue);
-            var outputParm = new DbTypeParameterInfo("Output1", size: 4);
-            outputParm.ConfigureOutputParameter(poco, p => p.MyValue, SqlParameterInfo.OutputParameterDirection.Output);
-            cmd.AddParameter(outputParm); //TODO: AddOutputParameter? move ConfigureOutputParameter inside it. // previously this was cmd.Parameters.Add, but now Parameters is get-only
+                .AddParameter("Input1", dbType: DbType.Int32)
+                .AddParameter("Output1", dbType: DbType.Int32, direction: ParameterDirection.Output)
+                .Build();
             int affected = cmd.Execute(commandType: CommandType.StoredProcedure);
 
-            string outputValue = cmd.Build().DapperParameters.Get<string>("Output1"); // why is this being returned as string? just because I didn't provide type above?
-            Assert.AreEqual(outputValue, "2");
-
-            Assert.AreEqual(poco.MyValue, 2);
+            int outputValue = cmd.DapperParameters.Get<int>("Output1");
+            Assert.AreEqual(outputValue, 2);
         }
 
         [Test]
@@ -638,24 +631,24 @@ SELECT @fKey", query.Build().Sql);
             if (categoryId == null && subCategoryId == null)
             {
                 Assert.AreEqual(@"SELECT * FROM [table1] WHERE 1=1", query.Build().Sql);
-                Assert.AreEqual(query.Build().DapperParameters.Count, 0);
+                Assert.AreEqual(query.Build().DapperParameters.ParameterNames.Count(), 0);
             }
             if (categoryId != null && subCategoryId == null)
             {
                 Assert.AreEqual(@"SELECT * FROM [table1] WHERE 1=1 AND [ProductCategoryID]=@p0", query.Build().Sql);
-                Assert.AreEqual(query.Build().DapperParameters.Count, 1);
+                Assert.AreEqual(query.Build().DapperParameters.ParameterNames.Count(), 1);
                 Assert.AreEqual(query.Build().DapperParameters.Get<int>("p0"), 2);
             }
             if (categoryId == null && subCategoryId != null)
             {
                 Assert.AreEqual(@"SELECT * FROM [table1] WHERE 1=1 AND [ProductSubcategoryID]=@p0", query.Build().Sql);
-                Assert.AreEqual(query.Build().DapperParameters.Count, 1);
+                Assert.AreEqual(query.Build().DapperParameters.ParameterNames.Count(), 1);
                 Assert.AreEqual(query.Build().DapperParameters.Get<int>("p0"), 1);
             }
             if (categoryId != null && subCategoryId != null)
             {
                 Assert.AreEqual(@"SELECT * FROM [table1] WHERE 1=1 AND [ProductCategoryID]=@p0 AND [ProductSubcategoryID]=@p1", query.Build().Sql);
-                Assert.AreEqual(query.Build().DapperParameters.Count, 2);
+                Assert.AreEqual(query.Build().DapperParameters.ParameterNames.Count(), 2);
                 Assert.AreEqual(query.Build().DapperParameters.Get<int>("p0"), 2);
                 Assert.AreEqual(query.Build().DapperParameters.Get<int>("p1"), 1);
             }
@@ -683,14 +676,14 @@ SELECT @fKey", query.Build().Sql);
 
             if (cmd.Options.ReuseIdenticalParameters)
             {
-                Assert.AreEqual(cmd.Build().DapperParameters.Count, 3);
+                Assert.AreEqual(cmd.Build().DapperParameters.ParameterNames.Count(), 3);
                 Assert.AreEqual(cmd.Build().DapperParameters.Get<int>("p0"), orderId);
                 Assert.AreEqual(cmd.Build().DapperParameters.Get<string>("p1"), action);
                 Assert.AreEqual(cmd.Build().DapperParameters.Get<string>("p2"), description);
             }
             else
             {
-                Assert.AreEqual(cmd.Build().DapperParameters.Count, 4);
+                Assert.AreEqual(cmd.Build().DapperParameters.ParameterNames.Count(), 4);
                 Assert.AreEqual(cmd.Build().DapperParameters.Get<int>("p0"), orderId);
                 Assert.AreEqual(cmd.Build().DapperParameters.Get<string>("p1"), action);
                 Assert.AreEqual(cmd.Build().DapperParameters.Get<int>("p2"), orderId);
@@ -1042,6 +1035,12 @@ END").Execute();
                 new XElement("Property1", "Value1"),
                 new XElement("Property2", "Value2")
             );
+            string expected = """
+                <Properties>
+                  <Property1>Value1</Property1>
+                  <Property2>Value2</Property2>
+                </Properties>
+                """;
 
             // Executing UPDATE query using {{properties:text}} syntax via QueryBuilder
             var qb = cn.QueryBuilder($$"""
@@ -1057,29 +1056,16 @@ END").Execute();
                 WHERE [Key] = @p1
                 """, cmd.Sql);
 
+            Assert.AreEqual(2, cmd.DapperParameters.ParameterNames.Count());
+            Assert.AreEqual(expected, cmd.DapperParameters.Get<DbString>("p0").Value); // DbString for TEXT/NTEXT
+            Assert.AreEqual(1, cmd.DapperParameters.Get<int>("p1"));
+
             var rowsAffected = await qb.ExecuteAsync();
             Assert.AreEqual(1, rowsAffected);
 
             // Querying updated row
             var updatedProperties = cn.ExecuteScalar<string>("SELECT Properties FROM Files WHERE [Key] = @key", new { key = fileKey });
-            string expected = """
-                <Properties>
-                  <Property1>Value1</Property1>
-                  <Property2>Value2</Property2>
-                </Properties>
-                """;
             Assert.AreEqual(expected, updatedProperties);
-
-            Assert.AreEqual("""
-                UPDATE Files 
-                SET Properties = @p0
-                WHERE [Key] = @p1
-                """, cmd.Sql);
-            Assert.AreEqual(2, cmd.DapperParameters.Count);
-            Assert.AreEqual(expected, cmd.DapperParameters.Get<string>("p0"));
-            Assert.AreEqual(1, cmd.DapperParameters.Get<int>("p1"));
-
-
         }
 
     }

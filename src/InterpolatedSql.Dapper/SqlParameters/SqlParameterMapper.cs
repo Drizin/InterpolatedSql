@@ -49,7 +49,7 @@ namespace InterpolatedSql.Dapper
         public virtual void AddToDynamicParameters(DynamicParameters target, SqlParameterInfo parameter)
         {
             // This behaves like Options.Parser.TransformArgument, but for Dapper parameters
-            //TODO: do implicit parameters have names here?!
+
             if (parameter is DbTypeParameterInfo dbParm)
                 target.Add(parameter.Name!, parameter.Value, dbParm.DbType, parameter.ParameterDirection ?? ParameterDirection.Input, dbParm.Size);
             else if (parameter is StringParameterInfo stringParm)
@@ -60,6 +60,41 @@ namespace InterpolatedSql.Dapper
             }
             else
                 target.Add(parameter.Name!, parameter.Value);
+        }
+
+        public virtual ParametersDictionary GetParametersDictionary(IInterpolatedSql sql, InterpolatedSqlBuilderOptions? options = null)
+        {
+            return GetParametersDictionary(sql.SqlParameters, sql.ExplicitParameters, options);
+        }
+
+        public virtual ParametersDictionary GetParametersDictionary(IEnumerable<InterpolatedSqlParameter> sqlParameters, IEnumerable<SqlParameterInfo> explicitParameters, InterpolatedSqlBuilderOptions? options = null)
+        {
+            var parameters = new ParametersDictionary();
+            //HashSet<string> parmNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase); //TODO: check for name clashes, rename as required
+
+            options ??= InterpolatedSqlBuilderOptions.DefaultOptions;
+
+            foreach (var explicitParameter in explicitParameters)
+            {
+                parameters.Add(explicitParameter);
+            }
+            for (int i = 0; i < sqlParameters.Count(); i++)
+            {
+                var sqlParameter = sqlParameters.ElementAt(i);
+                var parmName = CalculateAutoParameterName(sqlParameter, i, options);
+                var parmValue = sqlParameter.Argument;
+                var format = sqlParameter.Format;
+                if (!string.IsNullOrWhiteSpace(format))
+                    throw new ArgumentException("Unrecognized format modifier: " + format);
+                if (parmValue is SqlParameterInfo parm)
+                {
+                    parm.Name = parmName;
+                    parameters[parmName] = parm;
+                }
+                else
+                    parameters.Add(new SqlParameterInfo(parmName, parmValue));
+            }
+            return parameters;
         }
 
         /// <summary>

@@ -32,9 +32,9 @@ namespace InterpolatedSql.Dapper.Tests
 
             Assert.AreEqual("INSERT INTO [Production].[Product] (Name, ProductNumber, ListPrice) VALUES (@p0, @p1, @p2);", insert.Sql);
             Assert.AreEqual(3, insert.SqlParameters.Count);
-            Assert.AreEqual("My Product", insert.DapperParameters["p0"].Value);
-            Assert.AreEqual("AR-5381", insert.DapperParameters["p1"].Value);
-            Assert.AreEqual(10.20, insert.DapperParameters["p2"].Value);
+            Assert.AreEqual("My Product", insert.DapperParameters.Get<string>("p0"));
+            Assert.AreEqual("AR-5381", insert.DapperParameters.Get<string>("p1"));
+            Assert.AreEqual(10.20, insert.DapperParameters.Get<double>("p2"));
         }
 
 
@@ -53,10 +53,10 @@ namespace InterpolatedSql.Dapper.Tests
 
             Assert.AreEqual("UPDATE [Production].[Product] SET Name=@p0, ProductNumber=@p1, ListPrice=@p2 WHERE ProductID=@p3", update.Sql);
             Assert.AreEqual(4, update.SqlParameters.Count);
-            Assert.AreEqual("My Product", update.DapperParameters["p0"].Value);
-            Assert.AreEqual("AR-5381", update.DapperParameters["p1"].Value);
-            Assert.AreEqual(10.20, update.DapperParameters["p2"].Value);
-            Assert.AreEqual(productId, update.DapperParameters["p3"].Value);
+            Assert.AreEqual("My Product", update.DapperParameters.Get<string>("p0"));
+            Assert.AreEqual("AR-5381", update.DapperParameters.Get<string>("p1"));
+            Assert.AreEqual(10.20, update.DapperParameters.Get<double>("p2"));
+            Assert.AreEqual(productId, update.DapperParameters.Get<int>("p3"));
         }
 
     }

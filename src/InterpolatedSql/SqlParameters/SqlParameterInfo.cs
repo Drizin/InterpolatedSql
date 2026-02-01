@@ -34,12 +34,6 @@ namespace InterpolatedSql
         /// but you may explicitly describe parameters as Output, InputOutput, or ReturnValues.
         /// </summary>
         public ParameterDirection? ParameterDirection { get; set; }
-
-
-        /// <summary>
-        /// Output parameters (created using <see cref="ConfigureOutputParameter{T, TP}(T, Expression{Func{T, TP}}, OutputParameterDirection)"/>) invoke this callback to set their value back to Target type
-        /// </summary>
-        public Action<object>? OutputCallback { get; set; }
         #endregion
 
         #region ctors
@@ -54,49 +48,6 @@ namespace InterpolatedSql
             this.Name = name;
             this.Value = value;
             this.ParameterDirection = direction;
-        }
-
-
-        /// <summary>
-        /// Creates a new Output Parameter (can be Output, InputOutput, or ReturnValue) <br />
-        /// and registers a callback action which (after command invocation) will populate back parameter output value into an instance property.
-        /// </summary>
-        /// <param name="target">Target variable where output value will be set.</param>
-        /// <param name="expression">Property where output value will be set. If it's InputOutput type this value will be passed.</param>
-        /// <param name="direction">The type of output of the parameter.</param>
-        public void ConfigureOutputParameter<T, TP>(T target, Expression<Func<T, TP>> expression, OutputParameterDirection direction = OutputParameterDirection.Output)
-        {
-            if (ParameterDirection != null)
-                throw new ArgumentException($"For Output-type parameters the ParameterDirection should only be set by {nameof(ConfigureOutputParameter)}");
-            
-            ParameterDirection = (ParameterDirection)direction;
-
-            // For InputOutput we send current value
-            if (ParameterDirection == System.Data.ParameterDirection.InputOutput)
-            {
-                if (Value != null)
-                    throw new ArgumentException($"For {nameof(OutputParameterDirection.InputOutput)} the value should be set by the target expression");
-                Value = expression.Compile().Invoke(target);
-            }
-
-            var setter = GetSetter(expression);
-            OutputCallback = new Action<object>(o => {
-                TP val;
-                if (o is TP)
-                    val = (TP)o;
-                else
-                {
-                    try
-                    {
-                        val = (TP)Convert.ChangeType(o, typeof(TP));
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception($"Can't convert {Name} ({Value}) to type {typeof(TP).Name}", ex);
-                    }
-                }
-                setter(target, val); // TP (property type) must match the return value
-            });
         }
         #endregion
 

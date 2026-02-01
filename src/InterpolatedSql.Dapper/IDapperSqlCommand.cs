@@ -1,12 +1,17 @@
-﻿namespace InterpolatedSql.Dapper
+﻿using Dapper;
+
+namespace InterpolatedSql.Dapper
 {
     /// <summary>
     /// Dapper Sql Command that can be executed
     /// </summary>
     public interface IDapperSqlCommand : ISqlCommand
     {
+        /// <summary>Sql Parameters converted into Dictionary format</summary>
+        ParametersDictionary DictionaryParameters { get; }
+
         /// <summary>Sql Parameters converted into Dapper format</summary>
-        ParametersDictionary DapperParameters { get; }
+        DynamicParameters DapperParameters { get; }
     }
 
     /// <summary>

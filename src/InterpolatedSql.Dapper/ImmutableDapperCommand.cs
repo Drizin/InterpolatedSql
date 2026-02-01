@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Dapper;
+using System.Collections.Generic;
 using System.Data;
 
 namespace InterpolatedSql.Dapper
@@ -15,14 +16,18 @@ namespace InterpolatedSql.Dapper
         public IDbConnection DbConnection { get; set; }
 
         /// <summary>Sql Parameters converted into Dapper format</summary>
-        public ParametersDictionary DapperParameters { get; }
+        public ParametersDictionary DictionaryParameters { get; }
+
+        /// <summary>Sql Parameters converted into Dapper format</summary>
+        public DynamicParameters DapperParameters { get; }
 
         /// <inheritdoc />
         public ImmutableDapperCommand(IDbConnection connection,
-            string sql, string format, IReadOnlyList<InterpolatedSqlParameter> sqlParameters, IReadOnlyList<SqlParameterInfo> explicitParameters) : base(sql, format, sqlParameters, explicitParameters)
+            string sql, string format, IReadOnlyList<InterpolatedSqlParameter> sqlParameters, IReadOnlyList<SqlParameterInfo> explicitParameters, ParametersDictionary dictionaryParameters, DynamicParameters dapperParameters) : base(sql, format, sqlParameters, explicitParameters)
         {
             DbConnection = connection;
-            DapperParameters = ParametersDictionary.LoadFrom(this);
+            DictionaryParameters = dictionaryParameters;
+            DapperParameters = dapperParameters;
         }
     }
 }
