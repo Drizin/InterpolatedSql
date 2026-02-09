@@ -66,7 +66,7 @@ try {
 	& $msbuild "InterpolatedSql\InterpolatedSql.csproj" `
 			   /t:Pack                                        `
 			   /p:PackageOutputPath="..\packages-local\"      `
-			   '/p:targetFrameworks="netstandard2.0;net462;net472;net5.0;net6.0;net7.0;net8.0;net9.0"'  `
+			   '/p:targetFrameworks="netstandard2.0;net462;net472;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0"'  `
 			   /p:Configuration=$configuration                `
 			   /p:IncludeSymbols=true                         `
 			   /p:SymbolPackageFormat=snupkg                  `
@@ -79,7 +79,7 @@ try {
 	& $msbuild "InterpolatedSql.StrongName\InterpolatedSql.StrongName.csproj" `
 			   /t:Pack                                        `
 			   /p:PackageOutputPath="..\packages-local\"      `
-			   '/p:targetFrameworks="netstandard2.0;net462;net472;net5.0;net6.0;net7.0;net8.0;net9.0"'  `
+			   '/p:targetFrameworks="netstandard2.0;net462;net472;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0"'  `
 			   /p:Configuration=$configuration                `
 			   /p:IncludeSymbols=true                         `
 			   /p:SymbolPackageFormat=snupkg                  `
@@ -92,7 +92,7 @@ try {
 	& $msbuild "InterpolatedSql.Dapper\InterpolatedSql.Dapper.csproj" `
 			   /t:Pack                                        `
 			   /p:PackageOutputPath="..\packages-local\"      `
-			   '/p:targetFrameworks="netstandard2.0;net462;net472;net5.0;net6.0;net7.0;net8.0;net9.0"'  `
+			   '/p:targetFrameworks="netstandard2.0;net462;net472;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0"'  `
 			   /p:Configuration=$configuration                `
 			   /p:IncludeSymbols=true                         `
 			   /p:SymbolPackageFormat=snupkg                  `
@@ -105,7 +105,7 @@ try {
 	& $msbuild "InterpolatedSql.Dapper.StrongName\InterpolatedSql.Dapper.StrongName.csproj" `
 			   /t:Pack                                        `
 			   /p:PackageOutputPath="..\packages-local\"      `
-			   '/p:targetFrameworks="netstandard2.0;net462;net472;net5.0;net6.0;net7.0;net8.0;net9.0"'  `
+			   '/p:targetFrameworks="netstandard2.0;net462;net472;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0"'  `
 			   /p:Configuration=$configuration                `
 			   /p:IncludeSymbols=true                         `
 			   /p:SymbolPackageFormat=snupkg                  `
